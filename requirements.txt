@@ -3,6 +3,7 @@ boto3
 
 # Environment configuration
 python-dotenv
+pip-system-certs
 
 # Data processing (future phases)
 pandas

@@ -13,6 +13,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+try:
+    import pip_system_certs  # noqa: F401 — use Windows certificate store for SSL
+except ImportError:
+    pass
+
 import boto3
 from botocore.exceptions import (
     ClientError,
@@ -218,11 +223,15 @@ def main() -> int:
     except ClientError as exc:
         error_code = exc.response.get("Error", {}).get("Code", "Unknown")
         error_message = exc.response.get("Error", {}).get("Message", str(exc))
-        logger.error(
-            "AWS API error [%s]: %s",
-            error_code,
-            error_message,
-        )
+        if error_code in ("AuthFailure", "InvalidClientTokenId", "SignatureDoesNotMatch"):
+            logger.error(
+                "AWS API error [%s]: %s. "
+                "Check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.",
+                error_code,
+                error_message,
+            )
+        else:
+            logger.error("AWS API error [%s]: %s", error_code, error_message)
         return 1
 
     except Exception as exc:
