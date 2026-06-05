@@ -66,7 +66,7 @@ def load_environment() -> None:
             "Copy .env.example to .env and fill in your AWS credentials."
         )
 
-    loaded = load_dotenv(ENV_FILE)
+    loaded = load_dotenv(ENV_FILE, override=True)
     if not loaded:
         logger.warning(".env file exists but no variables were loaded from it.")
 
@@ -161,7 +161,7 @@ def print_regions(regions: list[str]) -> None:
     print("\nAvailable AWS regions:")
     print("-" * 40)
     for region in regions:
-        print(f"  • {region}")
+        print(f"  - {region}")
     print("-" * 40)
     print(f"Total: {len(regions)} regions\n")
 
@@ -190,7 +190,7 @@ def main() -> int:
 
         regions = fetch_available_regions(ec2_client)
 
-        print("\n✅ AWS authentication successful!")
+        print("\n[SUCCESS] AWS authentication successful!")
         print_regions(regions)
 
         logger.info("Connectivity check completed successfully.")

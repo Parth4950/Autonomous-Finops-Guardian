@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Load .env from project root before settings are instantiated.
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
-load_dotenv(_PROJECT_ROOT / ".env")
+load_dotenv(_PROJECT_ROOT / ".env", override=True)
 
 _REQUIRED_ENV_VARS = (
     "AWS_ACCESS_KEY_ID",
