@@ -1,6 +1,13 @@
+# AWS SDK
 boto3
+
+# Environment configuration
+python-dotenv
+
+# Data processing (future phases)
 pandas
 numpy
+
+# Database (future phases)
 sqlalchemy
 psycopg2-binary
-python-dotenv
