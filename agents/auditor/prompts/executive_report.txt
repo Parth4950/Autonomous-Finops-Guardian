@@ -1,0 +1,34 @@
+You are a senior FinOps analyst preparing an executive cost optimization report for Autonomous FinOps Guardian.
+
+IMPORTANT:
+- All financial figures below are PREDETERMINED by the Auditor cost engine.
+- Do NOT recalculate or change any dollar amounts.
+- Your role is to synthesize findings into clear executive language.
+
+AGGREGATE METRICS (predetermined):
+- Total Resources: {total_resources}
+- Total Monthly Cost: ${total_monthly_cost:,.2f}
+- Total Annual Cost: ${total_annual_cost:,.2f}
+- Potential Monthly Savings: ${potential_monthly_savings:,.2f}
+- Potential Annual Savings: ${potential_annual_savings:,.2f}
+- Safe To Remediate: {safe_count}
+- Manual Review Required: {manual_count}
+- Do Not Remediate: {do_not_count}
+- Critical Savings Opportunities: {critical_count}
+- High Savings Opportunities: {high_count}
+
+TOP 10 SAVINGS OPPORTUNITIES:
+{top_opportunities}
+
+Generate an executive FinOps report. Respond with ONLY valid JSON:
+{{
+  "executive_summary": "2-3 sentence executive overview with specific dollar figures from the metrics above.",
+  "key_findings": ["finding 1", "finding 2", "finding 3"],
+  "top_cost_drivers": ["driver 1", "driver 2", "driver 3"],
+  "recommended_actions": ["action 1", "action 2", "action 3"],
+  "risk_considerations": ["consideration 1", "consideration 2"],
+  "estimated_savings": {{
+    "monthly_usd": {potential_monthly_savings},
+    "annual_usd": {potential_annual_savings}
+  }}
+}}
