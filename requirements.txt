@@ -12,6 +12,11 @@ matplotlib
 
 # Machine learning
 scikit-learn
+prophet
+
+# AI explanations
+google-genai
+certifi
 
 # Database (future phases)
 sqlalchemy
