@@ -1,0 +1,28 @@
+{
+  "executive_summary": "We identified 100 cloud resources representing $21,290.72 in monthly spend and $255,488.64 annually. Potential recoverable savings are $11,871.36/month ($142,456.32/year). 44 resources are classified as low-risk remediation candidates.",
+  "key_findings": [
+    "20 resources flagged as critical or high savings opportunities.",
+    "44 resources are safe to remediate immediately.",
+    "$11,871.36/month in savings requires only low-risk actions."
+  ],
+  "top_cost_drivers": [
+    "Underutilized compute resources with high waste scores.",
+    "Zombie instances incurring cost without productive utilization.",
+    "Resources with safe remediation status driving immediate savings potential."
+  ],
+  "recommended_actions": [
+    "Prioritize remediation of 44 safe-to-remediate resources.",
+    "Schedule manual review for 36 medium-risk resources.",
+    "Defer action on 20 high-risk production resources."
+  ],
+  "risk_considerations": [
+    "20 resources require do-not-remediate status due to operational risk.",
+    "36 resources need stakeholder approval before changes.",
+    "Savings estimates assume successful rightsizing or termination of idle resources."
+  ],
+  "estimated_savings": {
+    "monthly_usd": 11871.36,
+    "annual_usd": 142456.32
+  },
+  "source": "fallback"
+}
