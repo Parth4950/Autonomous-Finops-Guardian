@@ -1,0 +1,6 @@
+execution_id,approval_id,resource_id,action,status,timestamp
+a41b2e12-8ac9-4560-838e-c382fc89bacc,bf7fe20e-b899-4c1e-9cbf-3de317fc9d12,res-zombie-002,terminate,success,2026-06-07T11:19:39.310243+00:00
+ada95e71-83a6-4b13-8767-6b31a8b51b3e,ed6c8cab-66a2-4980-87db-3b0e245bea9f,res-zombie-008,terminate,success,2026-06-07T11:19:39.331026+00:00
+db1dc2ac-a809-46b9-b6a2-dcddf5e258c0,c279089e-9726-4e32-9bb7-6447f7febb02,res-zombie-009,terminate,success,2026-06-07T11:19:39.348112+00:00
+8e0450bc-8b3d-442f-9650-4d1de11fb57e,f358b25f-5d56-47be-b921-cfdc3d3160cd,res-zombie-016,terminate,success,2026-06-07T11:19:39.364224+00:00
+7e4fe35b-dff4-4583-a134-da19e1099816,14d913f2-795b-449f-9777-7342e84e8a1f,res-zombie-019,terminate,success,2026-06-07T11:19:39.380821+00:00

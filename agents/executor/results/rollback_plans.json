@@ -1,0 +1,57 @@
+[
+  {
+    "approval_id": "bf7fe20e-b899-4c1e-9cbf-3de317fc9d12",
+    "resource_id": "res-zombie-002",
+    "action": "terminate",
+    "steps": [
+      "Restore snapshot",
+      "Launch replacement instance",
+      "Validate instance health",
+      "Update routing and monitoring"
+    ]
+  },
+  {
+    "approval_id": "ed6c8cab-66a2-4980-87db-3b0e245bea9f",
+    "resource_id": "res-zombie-008",
+    "action": "terminate",
+    "steps": [
+      "Restore snapshot",
+      "Launch replacement instance",
+      "Validate instance health",
+      "Update routing and monitoring"
+    ]
+  },
+  {
+    "approval_id": "c279089e-9726-4e32-9bb7-6447f7febb02",
+    "resource_id": "res-zombie-009",
+    "action": "terminate",
+    "steps": [
+      "Restore snapshot",
+      "Launch replacement instance",
+      "Validate instance health",
+      "Update routing and monitoring"
+    ]
+  },
+  {
+    "approval_id": "f358b25f-5d56-47be-b921-cfdc3d3160cd",
+    "resource_id": "res-zombie-016",
+    "action": "terminate",
+    "steps": [
+      "Restore snapshot",
+      "Launch replacement instance",
+      "Validate instance health",
+      "Update routing and monitoring"
+    ]
+  },
+  {
+    "approval_id": "14d913f2-795b-449f-9777-7342e84e8a1f",
+    "resource_id": "res-zombie-019",
+    "action": "terminate",
+    "steps": [
+      "Restore snapshot",
+      "Launch replacement instance",
+      "Validate instance health",
+      "Update routing and monitoring"
+    ]
+  }
+]
