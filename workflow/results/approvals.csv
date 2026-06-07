@@ -1,8 +1,8 @@
 approval_id,resource_id,action,status,timestamp
 7a348157-9dce-4735-8049-eb4dbeb02fae,res-healthy-004,manual_review,rejected,2026-06-07T11:18:25.911708+00:00
-6d394e4c-cd66-4584-b7e3-24e552049817,res-healthy-006,manual_review,pending,2026-06-07T11:18:25.395055+00:00
-29a8eee8-961f-47eb-9b71-247fca200cba,res-healthy-012,manual_review,pending,2026-06-07T11:18:25.400811+00:00
-6a6afeac-b5ca-4a6a-9509-25eb1b0e7127,res-healthy-013,manual_review,pending,2026-06-07T11:18:25.406434+00:00
+6d394e4c-cd66-4584-b7e3-24e552049817,res-healthy-006,manual_review,approved,2026-06-07T12:03:22.087176+00:00
+29a8eee8-961f-47eb-9b71-247fca200cba,res-healthy-012,manual_review,approved,2026-06-07T12:03:23.890434+00:00
+6a6afeac-b5ca-4a6a-9509-25eb1b0e7127,res-healthy-013,manual_review,rejected,2026-06-07T12:03:30.195495+00:00
 ece23742-415a-4455-a20f-80cc5302b42e,res-healthy-014,manual_review,pending,2026-06-07T11:18:25.411867+00:00
 f8d67843-3e83-4058-bf50-08056b762d50,res-healthy-017,manual_review,pending,2026-06-07T11:18:25.417631+00:00
 29ab3fca-03a6-41c1-9d07-943668a5aef5,res-healthy-020,manual_review,pending,2026-06-07T11:18:25.423357+00:00

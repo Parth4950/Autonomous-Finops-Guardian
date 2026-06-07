@@ -1,0 +1,1576 @@
+{
+  "meta": {
+    "generated_from": "workflow\\results\\approvals.json",
+    "total": 54
+  },
+  "stats": {
+    "total": 54,
+    "pending": 48,
+    "approved": 0,
+    "rejected": 1,
+    "executed": 5,
+    "pending_savings": 28633.5,
+    "approved_savings": 5658.96
+  },
+  "approvals": [
+    {
+      "approval_id": "7a348157-9dce-4735-8049-eb4dbeb02fae",
+      "resource_id": "res-healthy-004",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 512.64,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $512.64 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.0.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "rejected",
+      "created_at": "2026-06-07T11:18:25.382031+00:00",
+      "updated_at": "2026-06-07T11:18:25.911708+00:00",
+      "reviewed_by": "platform-lead",
+      "review_notes": "Requires additional dependency validation before action."
+    },
+    {
+      "approval_id": "6d394e4c-cd66-4584-b7e3-24e552049817",
+      "resource_id": "res-healthy-006",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 945.36,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $945.36 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.4.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.395055+00:00",
+      "updated_at": "2026-06-07T11:18:25.395055+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "29a8eee8-961f-47eb-9b71-247fca200cba",
+      "resource_id": "res-healthy-012",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 1084.26,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $1,084.26 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 7.7.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.400811+00:00",
+      "updated_at": "2026-06-07T11:18:25.400811+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "6a6afeac-b5ca-4a6a-9509-25eb1b0e7127",
+      "resource_id": "res-healthy-013",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 440.76,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $440.76 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 7.3.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.406434+00:00",
+      "updated_at": "2026-06-07T11:18:25.406434+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "ece23742-415a-4455-a20f-80cc5302b42e",
+      "resource_id": "res-healthy-014",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 1281.84,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $1,281.84 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.5.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.411867+00:00",
+      "updated_at": "2026-06-07T11:18:25.411867+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "f8d67843-3e83-4058-bf50-08056b762d50",
+      "resource_id": "res-healthy-017",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 217.98,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $217.98 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 5.7.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.417631+00:00",
+      "updated_at": "2026-06-07T11:18:25.417631+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "29ab3fca-03a6-41c1-9d07-943668a5aef5",
+      "resource_id": "res-healthy-020",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 1227.18,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $1,227.18 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.7.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.423357+00:00",
+      "updated_at": "2026-06-07T11:18:25.423357+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "e62e6a49-2806-4ebb-aeff-94c10df588f2",
+      "resource_id": "res-healthy-023",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 1150.2,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $1,150.20 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 7.3.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.429067+00:00",
+      "updated_at": "2026-06-07T11:18:25.429067+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "2cbda585-609e-420b-9d6c-8e56bc8e7d83",
+      "resource_id": "res-healthy-025",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 334.92,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $334.92 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.3.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.435359+00:00",
+      "updated_at": "2026-06-07T11:18:25.435359+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "1619add4-e57e-406b-a6a6-2123e9c28926",
+      "resource_id": "res-healthy-026",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 179.64,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $179.64 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 4.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.441328+00:00",
+      "updated_at": "2026-06-07T11:18:25.441328+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "b8cd7d28-5f10-4ca6-a546-fe1d5d3e8c02",
+      "resource_id": "res-healthy-028",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 290.28,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $290.28 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.4.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.447532+00:00",
+      "updated_at": "2026-06-07T11:18:25.447532+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "c6bc324d-193c-46ca-b5c6-c53012b61ef0",
+      "resource_id": "res-healthy-029",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 454.08,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $454.08 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.1.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.454091+00:00",
+      "updated_at": "2026-06-07T11:18:25.454091+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "919cb220-ca41-42a1-bf9c-98607f5a9399",
+      "resource_id": "res-healthy-030",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 434.88,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $434.88 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.4.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.460547+00:00",
+      "updated_at": "2026-06-07T11:18:25.460547+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "09f8cff4-a8d4-41eb-8e7f-5720a28a12b8",
+      "resource_id": "res-healthy-032",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 953.76,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $953.76 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 9.8.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.467477+00:00",
+      "updated_at": "2026-06-07T11:18:25.467477+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "704c1d1c-f052-48d6-8184-c79a8bdbd74c",
+      "resource_id": "res-healthy-033",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 670.98,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $670.98 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 4.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.474150+00:00",
+      "updated_at": "2026-06-07T11:18:25.474150+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "5264d56a-b03f-4fac-a053-379f406fe865",
+      "resource_id": "res-healthy-035",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 522.72,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $522.72 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 9.1.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.480858+00:00",
+      "updated_at": "2026-06-07T11:18:25.480858+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "e0ba02aa-d29d-4366-8499-ff6029cdd06f",
+      "resource_id": "res-healthy-036",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 767.7,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $767.70 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 9.1.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.487245+00:00",
+      "updated_at": "2026-06-07T11:18:25.487245+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "266d2553-c1c5-4f57-8d52-7dc6c3ddf02d",
+      "resource_id": "res-healthy-041",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 622.2,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $622.20 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.1.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.494112+00:00",
+      "updated_at": "2026-06-07T11:18:25.494112+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "055d240d-d753-495c-a7c1-8abc139abbbc",
+      "resource_id": "res-healthy-042",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 238.02,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $238.02 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.501040+00:00",
+      "updated_at": "2026-06-07T11:18:25.501040+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "17f9cf46-0906-438e-815c-38af702463ab",
+      "resource_id": "res-healthy-043",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 719.64,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $719.64 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.5.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.508206+00:00",
+      "updated_at": "2026-06-07T11:18:25.508206+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "82c2ff5c-e107-4eb6-8128-b3466d72835e",
+      "resource_id": "res-healthy-044",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 683.64,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $683.64 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.7.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.515357+00:00",
+      "updated_at": "2026-06-07T11:18:25.515357+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "e8880641-0100-4c17-8f33-d981a713e2a0",
+      "resource_id": "res-healthy-045",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 461.22,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $461.22 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.6.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.523102+00:00",
+      "updated_at": "2026-06-07T11:18:25.523102+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "9d47ad05-c344-46fd-9ea9-a7490bb0b97d",
+      "resource_id": "res-healthy-047",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 650.82,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $650.82 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 8.6.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.530308+00:00",
+      "updated_at": "2026-06-07T11:18:25.530308+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "42d3e573-5127-433f-a7d5-cf8740581381",
+      "resource_id": "res-healthy-048",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 428.28,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $428.28 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 7.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.537508+00:00",
+      "updated_at": "2026-06-07T11:18:25.537508+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "0a913f14-1536-4eb3-916c-0f762018374d",
+      "resource_id": "res-healthy-049",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 472.86,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $472.86 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.3.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.544879+00:00",
+      "updated_at": "2026-06-07T11:18:25.544879+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "e86481ea-1986-4b34-bfcc-1e1161e7b28c",
+      "resource_id": "res-healthy-054",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 297.54,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $297.54 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 6.5.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.552278+00:00",
+      "updated_at": "2026-06-07T11:18:25.552278+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "2e06efa5-22fa-4ad0-9d7c-0766069eab81",
+      "resource_id": "res-zombie-001",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 406.44,
+      "business_justification": "Terminating this instance is expected to recover approximately $406.44 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.8.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.560017+00:00",
+      "updated_at": "2026-06-07T11:18:25.560017+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "bf7fe20e-b899-4c1e-9cbf-3de317fc9d12",
+      "resource_id": "res-zombie-002",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 1072.56,
+      "business_justification": "Terminating this instance is expected to recover approximately $1,072.56 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.3.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "executed",
+      "created_at": "2026-06-07T11:18:25.567664+00:00",
+      "updated_at": "2026-06-07T11:19:39.319539+00:00",
+      "reviewed_by": "executor-agent",
+      "review_notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "2cb6bbca-1c6d-401e-8949-688f499ebb6b",
+      "resource_id": "res-zombie-003",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 135.18,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $135.18 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 96.7.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.575487+00:00",
+      "updated_at": "2026-06-07T11:18:25.575487+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "540e8c20-7408-44b7-a7b8-8dd8a2bdb8f3",
+      "resource_id": "res-zombie-004",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 825.6,
+      "business_justification": "Terminating this instance is expected to recover approximately $825.60 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.6.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.583300+00:00",
+      "updated_at": "2026-06-07T11:18:25.583300+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "dfe7e9a5-9445-466f-a23c-a7c2b717499e",
+      "resource_id": "res-zombie-005",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 485.28,
+      "business_justification": "Terminating this instance is expected to recover approximately $485.28 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.2.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.591127+00:00",
+      "updated_at": "2026-06-07T11:18:25.591127+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "d70bb40d-a85a-45d4-ad0a-7a58461ec8b1",
+      "resource_id": "res-zombie-006",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 436.68,
+      "business_justification": "Terminating this instance is expected to recover approximately $436.68 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.2.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.599295+00:00",
+      "updated_at": "2026-06-07T11:18:25.599295+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "57cc9e24-321a-468e-9de5-761368dd9d33",
+      "resource_id": "res-zombie-007",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 375.24,
+      "business_justification": "Terminating this instance is expected to recover approximately $375.24 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.7.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.607552+00:00",
+      "updated_at": "2026-06-07T11:18:25.607552+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "ed6c8cab-66a2-4980-87db-3b0e245bea9f",
+      "resource_id": "res-zombie-008",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 1245.0,
+      "business_justification": "Terminating this instance is expected to recover approximately $1,245.00 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.6.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "executed",
+      "created_at": "2026-06-07T11:18:25.616008+00:00",
+      "updated_at": "2026-06-07T11:19:39.337000+00:00",
+      "reviewed_by": "executor-agent",
+      "review_notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "c279089e-9726-4e32-9bb7-6447f7febb02",
+      "resource_id": "res-zombie-009",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 995.88,
+      "business_justification": "Terminating this instance is expected to recover approximately $995.88 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.3.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "executed",
+      "created_at": "2026-06-07T11:18:25.624952+00:00",
+      "updated_at": "2026-06-07T11:19:39.353434+00:00",
+      "reviewed_by": "executor-agent",
+      "review_notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "6e6e3dab-604c-430d-b396-65a01354ed99",
+      "resource_id": "res-zombie-010",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 743.04,
+      "business_justification": "Terminating this instance is expected to recover approximately $743.04 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.9.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.634326+00:00",
+      "updated_at": "2026-06-07T11:18:25.634326+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "5430a202-8575-4182-a95b-311da6e650cd",
+      "resource_id": "res-zombie-011",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 114.42,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $114.42 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 96.9.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.643237+00:00",
+      "updated_at": "2026-06-07T11:18:25.643237+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "ba94ad89-4ab7-460c-b4aa-95aea92146e5",
+      "resource_id": "res-zombie-012",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 696.72,
+      "business_justification": "Terminating this instance is expected to recover approximately $696.72 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.8.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.653586+00:00",
+      "updated_at": "2026-06-07T11:18:25.653586+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "97fd2b4b-1226-474a-bb9e-9d97d15c2dfc",
+      "resource_id": "res-zombie-013",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 348.36,
+      "business_justification": "Terminating this instance is expected to recover approximately $348.36 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.2.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.663067+00:00",
+      "updated_at": "2026-06-07T11:18:25.663067+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "230fd730-b71d-4751-a44e-c2e497f85b4e",
+      "resource_id": "res-zombie-014",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 687.36,
+      "business_justification": "Terminating this instance is expected to recover approximately $687.36 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.6.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.672515+00:00",
+      "updated_at": "2026-06-07T11:18:25.672515+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "b9c25b90-fa48-447a-907e-67b2eea3e8b5",
+      "resource_id": "res-zombie-015",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 331.8,
+      "business_justification": "Terminating this instance is expected to recover approximately $331.80 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.6.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.682710+00:00",
+      "updated_at": "2026-06-07T11:18:25.682710+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "f358b25f-5d56-47be-b921-cfdc3d3160cd",
+      "resource_id": "res-zombie-016",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 1346.04,
+      "business_justification": "Terminating this instance is expected to recover approximately $1,346.04 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.4.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "executed",
+      "created_at": "2026-06-07T11:18:25.692348+00:00",
+      "updated_at": "2026-06-07T11:19:39.369838+00:00",
+      "reviewed_by": "executor-agent",
+      "review_notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "16829337-a75e-40f8-a01b-859249862885",
+      "resource_id": "res-zombie-017",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 546.72,
+      "business_justification": "Terminating this instance is expected to recover approximately $546.72 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.5.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.702842+00:00",
+      "updated_at": "2026-06-07T11:18:25.702842+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "f9b10c16-920c-4433-b330-65d7b7379034",
+      "resource_id": "res-zombie-018",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 902.64,
+      "business_justification": "Terminating this instance is expected to recover approximately $902.64 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.3.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.715193+00:00",
+      "updated_at": "2026-06-07T11:18:25.715193+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "14d913f2-795b-449f-9777-7342e84e8a1f",
+      "resource_id": "res-zombie-019",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 999.48,
+      "business_justification": "Terminating this instance is expected to recover approximately $999.48 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 96.4.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "executed",
+      "created_at": "2026-06-07T11:18:25.726216+00:00",
+      "updated_at": "2026-06-07T11:19:39.386714+00:00",
+      "reviewed_by": "executor-agent",
+      "review_notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "00b30de5-718d-4171-9647-22099ca5b90c",
+      "resource_id": "res-zombie-020",
+      "action": "terminate",
+      "risk_level": "low",
+      "estimated_savings": 971.4,
+      "business_justification": "Terminating this instance is expected to recover approximately $971.40 annually. Risk analysis indicates low operational risk (Safe To Remediate), with a waste score of 97.6.",
+      "execution_steps": [
+        "Create backup",
+        "Verify backup",
+        "Terminate instance"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.737100+00:00",
+      "updated_at": "2026-06-07T11:18:25.737100+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "e2941ae8-e95d-47af-940f-0095d7b417b7",
+      "resource_id": "res-seasonal-001",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 953.88,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $953.88 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.6.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.747286+00:00",
+      "updated_at": "2026-06-07T11:18:25.747286+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "1b50ee98-132b-42ef-aa4a-3a2a89e86828",
+      "resource_id": "res-seasonal-004",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 314.04,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $314.04 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.5.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.757477+00:00",
+      "updated_at": "2026-06-07T11:18:25.757477+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "23089166-6ca7-44e6-959c-49cfbbfc8943",
+      "resource_id": "res-seasonal-007",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 426.78,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $426.78 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.767917+00:00",
+      "updated_at": "2026-06-07T11:18:25.767917+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "beaf0b42-5fd5-471e-a421-1c27166e50e3",
+      "resource_id": "res-seasonal-008",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 815.4,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $815.40 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.1.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.778265+00:00",
+      "updated_at": "2026-06-07T11:18:25.778265+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "d921a96a-79da-4a4d-a7f3-4f48574870df",
+      "resource_id": "res-seasonal-011",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 708.84,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $708.84 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.6.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.789132+00:00",
+      "updated_at": "2026-06-07T11:18:25.789132+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "54683254-a262-41c4-9d53-e7be918b0839",
+      "resource_id": "res-seasonal-014",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 690.72,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $690.72 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 13.5.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.800818+00:00",
+      "updated_at": "2026-06-07T11:18:25.800818+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "1fa0aba6-a05c-481d-8c2b-06f04885045b",
+      "resource_id": "res-seasonal-018",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 528.96,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $528.96 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 14.2.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.811330+00:00",
+      "updated_at": "2026-06-07T11:18:25.811330+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    {
+      "approval_id": "6f5c6118-c7c7-400d-8d79-c5e1cfed9721",
+      "resource_id": "res-seasonal-020",
+      "action": "manual_review",
+      "risk_level": "medium",
+      "estimated_savings": 657.24,
+      "business_justification": "Flagging this resource for manual review is expected to recover approximately $657.24 annually. Risk analysis indicates medium operational risk (Manual Review Required), with a waste score of 14.3.",
+      "execution_steps": [
+        "Flag resource for manual review",
+        "Notify stakeholders",
+        "Await approval decision"
+      ],
+      "status": "pending",
+      "created_at": "2026-06-07T11:18:25.822921+00:00",
+      "updated_at": "2026-06-07T11:18:25.822921+00:00",
+      "reviewed_by": null,
+      "review_notes": null
+    }
+  ],
+  "history": [
+    {
+      "approval_id": "14d913f2-795b-449f-9777-7342e84e8a1f",
+      "resource_id": "res-zombie-019",
+      "previous_status": "approved",
+      "new_status": "executed",
+      "timestamp": "2026-06-07T11:19:39.393111+00:00",
+      "actor": "executor-agent",
+      "notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "f358b25f-5d56-47be-b921-cfdc3d3160cd",
+      "resource_id": "res-zombie-016",
+      "previous_status": "approved",
+      "new_status": "executed",
+      "timestamp": "2026-06-07T11:19:39.376311+00:00",
+      "actor": "executor-agent",
+      "notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "c279089e-9726-4e32-9bb7-6447f7febb02",
+      "resource_id": "res-zombie-009",
+      "previous_status": "approved",
+      "new_status": "executed",
+      "timestamp": "2026-06-07T11:19:39.359773+00:00",
+      "actor": "executor-agent",
+      "notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "ed6c8cab-66a2-4980-87db-3b0e245bea9f",
+      "resource_id": "res-zombie-008",
+      "previous_status": "approved",
+      "new_status": "executed",
+      "timestamp": "2026-06-07T11:19:39.343549+00:00",
+      "actor": "executor-agent",
+      "notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "bf7fe20e-b899-4c1e-9cbf-3de317fc9d12",
+      "resource_id": "res-zombie-002",
+      "previous_status": "approved",
+      "new_status": "executed",
+      "timestamp": "2026-06-07T11:19:39.326299+00:00",
+      "actor": "executor-agent",
+      "notes": "Executed in simulation mode."
+    },
+    {
+      "approval_id": "7a348157-9dce-4735-8049-eb4dbeb02fae",
+      "resource_id": "res-healthy-004",
+      "previous_status": "pending",
+      "new_status": "rejected",
+      "timestamp": "2026-06-07T11:18:25.921790+00:00",
+      "actor": "platform-lead",
+      "notes": "Requires additional dependency validation before action."
+    },
+    {
+      "approval_id": "c279089e-9726-4e32-9bb7-6447f7febb02",
+      "resource_id": "res-zombie-009",
+      "previous_status": "pending",
+      "new_status": "approved",
+      "timestamp": "2026-06-07T11:18:25.906011+00:00",
+      "actor": "cloud-engineer",
+      "notes": "Low-risk zombie resource approved for termination."
+    },
+    {
+      "approval_id": "14d913f2-795b-449f-9777-7342e84e8a1f",
+      "resource_id": "res-zombie-019",
+      "previous_status": "pending",
+      "new_status": "approved",
+      "timestamp": "2026-06-07T11:18:25.889710+00:00",
+      "actor": "cloud-engineer",
+      "notes": "Low-risk zombie resource approved for termination."
+    },
+    {
+      "approval_id": "bf7fe20e-b899-4c1e-9cbf-3de317fc9d12",
+      "resource_id": "res-zombie-002",
+      "previous_status": "pending",
+      "new_status": "approved",
+      "timestamp": "2026-06-07T11:18:25.874290+00:00",
+      "actor": "cloud-engineer",
+      "notes": "Low-risk zombie resource approved for termination."
+    },
+    {
+      "approval_id": "ed6c8cab-66a2-4980-87db-3b0e245bea9f",
+      "resource_id": "res-zombie-008",
+      "previous_status": "pending",
+      "new_status": "approved",
+      "timestamp": "2026-06-07T11:18:25.860311+00:00",
+      "actor": "cloud-engineer",
+      "notes": "Low-risk zombie resource approved for termination."
+    },
+    {
+      "approval_id": "f358b25f-5d56-47be-b921-cfdc3d3160cd",
+      "resource_id": "res-zombie-016",
+      "previous_status": "pending",
+      "new_status": "approved",
+      "timestamp": "2026-06-07T11:18:25.845638+00:00",
+      "actor": "cloud-engineer",
+      "notes": "Low-risk zombie resource approved for termination."
+    },
+    {
+      "approval_id": "6f5c6118-c7c7-400d-8d79-c5e1cfed9721",
+      "resource_id": "res-seasonal-020",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.831447+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "1fa0aba6-a05c-481d-8c2b-06f04885045b",
+      "resource_id": "res-seasonal-018",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.818436+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "54683254-a262-41c4-9d53-e7be918b0839",
+      "resource_id": "res-seasonal-014",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.807656+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "d921a96a-79da-4a4d-a7f3-4f48574870df",
+      "resource_id": "res-seasonal-011",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.796255+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "beaf0b42-5fd5-471e-a421-1c27166e50e3",
+      "resource_id": "res-seasonal-008",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.785158+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "23089166-6ca7-44e6-959c-49cfbbfc8943",
+      "resource_id": "res-seasonal-007",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.774616+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "1b50ee98-132b-42ef-aa4a-3a2a89e86828",
+      "resource_id": "res-seasonal-004",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.763843+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "e2941ae8-e95d-47af-940f-0095d7b417b7",
+      "resource_id": "res-seasonal-001",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.753824+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "00b30de5-718d-4171-9647-22099ca5b90c",
+      "resource_id": "res-zombie-020",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.743627+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "14d913f2-795b-449f-9777-7342e84e8a1f",
+      "resource_id": "res-zombie-019",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.733134+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "f9b10c16-920c-4433-b330-65d7b7379034",
+      "resource_id": "res-zombie-018",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.721732+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "16829337-a75e-40f8-a01b-859249862885",
+      "resource_id": "res-zombie-017",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.711598+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "f358b25f-5d56-47be-b921-cfdc3d3160cd",
+      "resource_id": "res-zombie-016",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.698523+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "b9c25b90-fa48-447a-907e-67b2eea3e8b5",
+      "resource_id": "res-zombie-015",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.689016+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "230fd730-b71d-4751-a44e-c2e497f85b4e",
+      "resource_id": "res-zombie-014",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.678916+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "97fd2b4b-1226-474a-bb9e-9d97d15c2dfc",
+      "resource_id": "res-zombie-013",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.669259+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "ba94ad89-4ab7-460c-b4aa-95aea92146e5",
+      "resource_id": "res-zombie-012",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.659410+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "5430a202-8575-4182-a95b-311da6e650cd",
+      "resource_id": "res-zombie-011",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.649848+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "6e6e3dab-604c-430d-b396-65a01354ed99",
+      "resource_id": "res-zombie-010",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.640024+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "c279089e-9726-4e32-9bb7-6447f7febb02",
+      "resource_id": "res-zombie-009",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.630790+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "ed6c8cab-66a2-4980-87db-3b0e245bea9f",
+      "resource_id": "res-zombie-008",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.621633+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "57cc9e24-321a-468e-9de5-761368dd9d33",
+      "resource_id": "res-zombie-007",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.613056+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "d70bb40d-a85a-45d4-ad0a-7a58461ec8b1",
+      "resource_id": "res-zombie-006",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.604666+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "dfe7e9a5-9445-466f-a23c-a7c2b717499e",
+      "resource_id": "res-zombie-005",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.596151+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "540e8c20-7408-44b7-a7b8-8dd8a2bdb8f3",
+      "resource_id": "res-zombie-004",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.588255+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "2cb6bbca-1c6d-401e-8949-688f499ebb6b",
+      "resource_id": "res-zombie-003",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.580455+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "bf7fe20e-b899-4c1e-9cbf-3de317fc9d12",
+      "resource_id": "res-zombie-002",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.572704+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "2e06efa5-22fa-4ad0-9d7c-0766069eab81",
+      "resource_id": "res-zombie-001",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.564889+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "e86481ea-1986-4b34-bfcc-1e1161e7b28c",
+      "resource_id": "res-healthy-054",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.557271+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "0a913f14-1536-4eb3-916c-0f762018374d",
+      "resource_id": "res-healthy-049",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.549557+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "42d3e573-5127-433f-a7d5-cf8740581381",
+      "resource_id": "res-healthy-048",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.542190+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "9d47ad05-c344-46fd-9ea9-a7490bb0b97d",
+      "resource_id": "res-healthy-047",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.534882+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "e8880641-0100-4c17-8f33-d981a713e2a0",
+      "resource_id": "res-healthy-045",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.527736+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "82c2ff5c-e107-4eb6-8128-b3466d72835e",
+      "resource_id": "res-healthy-044",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.520438+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "17f9cf46-0906-438e-815c-38af702463ab",
+      "resource_id": "res-healthy-043",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.512841+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "055d240d-d753-495c-a7c1-8abc139abbbc",
+      "resource_id": "res-healthy-042",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.505602+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "266d2553-c1c5-4f57-8d52-7dc6c3ddf02d",
+      "resource_id": "res-healthy-041",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.498670+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "e0ba02aa-d29d-4366-8499-ff6029cdd06f",
+      "resource_id": "res-healthy-036",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.491530+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "5264d56a-b03f-4fac-a053-379f406fe865",
+      "resource_id": "res-healthy-035",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.484954+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "704c1d1c-f052-48d6-8184-c79a8bdbd74c",
+      "resource_id": "res-healthy-033",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.478550+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "09f8cff4-a8d4-41eb-8e7f-5720a28a12b8",
+      "resource_id": "res-healthy-032",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.471776+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "919cb220-ca41-42a1-bf9c-98607f5a9399",
+      "resource_id": "res-healthy-030",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.464854+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "c6bc324d-193c-46ca-b5c6-c53012b61ef0",
+      "resource_id": "res-healthy-029",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.458156+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "b8cd7d28-5f10-4ca6-a546-fe1d5d3e8c02",
+      "resource_id": "res-healthy-028",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.451752+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "1619add4-e57e-406b-a6a6-2123e9c28926",
+      "resource_id": "res-healthy-026",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.445055+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "2cbda585-609e-420b-9d6c-8e56bc8e7d83",
+      "resource_id": "res-healthy-025",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.439197+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "e62e6a49-2806-4ebb-aeff-94c10df588f2",
+      "resource_id": "res-healthy-023",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.433323+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "29ab3fca-03a6-41c1-9d07-943668a5aef5",
+      "resource_id": "res-healthy-020",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.427093+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "f8d67843-3e83-4058-bf50-08056b762d50",
+      "resource_id": "res-healthy-017",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.421341+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "ece23742-415a-4455-a20f-80cc5302b42e",
+      "resource_id": "res-healthy-014",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.415343+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "6a6afeac-b5ca-4a6a-9509-25eb1b0e7127",
+      "resource_id": "res-healthy-013",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.409811+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "29a8eee8-961f-47eb-9b71-247fca200cba",
+      "resource_id": "res-healthy-012",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.404504+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "6d394e4c-cd66-4584-b7e3-24e552049817",
+      "resource_id": "res-healthy-006",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.398765+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    },
+    {
+      "approval_id": "7a348157-9dce-4735-8049-eb4dbeb02fae",
+      "resource_id": "res-healthy-004",
+      "previous_status": null,
+      "new_status": "pending",
+      "timestamp": "2026-06-07T11:18:25.393095+00:00",
+      "actor": "planner-agent",
+      "notes": "Approval request created from planner package."
+    }
+  ]
+}

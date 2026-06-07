@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 14% 6%;
+    --foreground: 210 20% 92%;
+    --card: 220 12% 10%;
+    --card-foreground: 210 20% 92%;
+    --primary: 258 100% 64%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 16%;
+    --secondary-foreground: 210 20% 92%;
+    --muted: 220 10% 16%;
+    --muted-foreground: 215 10% 58%;
+    --accent: 258 60% 20%;
+    --accent-foreground: 258 100% 80%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 18%;
+    --input: 220 10% 18%;
+    --ring: 258 100% 64%;
+    --radius: 0.5rem;
+    --sidebar: 220 14% 8%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-border: 220 10% 16%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(119, 69, 255, 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(88, 166, 255, 0.06), transparent);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .panel {
+    @apply rounded-lg border border-border bg-card shadow-panel;
+  }
+
+  .metric-label {
+    @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .audit-print-root {
+    color: black;
+  }
+
+  nav,
+  aside,
+  header,
+  button,
+  .no-print {
+    display: none !important;
+  }
+}

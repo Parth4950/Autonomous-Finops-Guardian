@@ -645,11 +645,20 @@ class PlannerPipeline:
 
         export_columns = [
             "resource_id",
+            "resource_type",
             "action",
             "risk_level",
+            "waste_score",
+            "recommendation",
             "estimated_savings",
+            "monthly_cost",
+            "annual_cost",
+            "risk_score",
+            "risk_explanation",
             "execution_steps",
             "business_justification",
+            "technical_justification",
+            "expected_outcome",
         ]
         export_frame = results.copy()
         export_frame["execution_steps"] = export_frame["execution_steps"].apply(

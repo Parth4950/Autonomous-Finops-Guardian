@@ -1,0 +1,25 @@
+"""Backend domain models and path configuration."""
+
+from backend.models.paths import (
+    APPROVALS_JSON,
+    AUDIT_RESULTS_CSV,
+    EXECUTION_HISTORY_CSV,
+    PROJECT_ROOT,
+    REMEDIATION_PLAN_CSV,
+    RESOURCES_CSV,
+    RISK_ASSESSMENT_CSV,
+    WASTE_FORECAST_CSV,
+    WASTE_PREDICTIONS_CSV,
+)
+
+__all__ = [
+    "PROJECT_ROOT",
+    "RESOURCES_CSV",
+    "WASTE_FORECAST_CSV",
+    "WASTE_PREDICTIONS_CSV",
+    "RISK_ASSESSMENT_CSV",
+    "AUDIT_RESULTS_CSV",
+    "REMEDIATION_PLAN_CSV",
+    "APPROVALS_JSON",
+    "EXECUTION_HISTORY_CSV",
+]

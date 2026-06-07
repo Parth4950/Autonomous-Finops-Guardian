@@ -1,0 +1,16 @@
+export const queryKeys = {
+  health: ["health"] as const,
+  resources: ["resources"] as const,
+  waste: ["waste"] as const,
+  risk: ["risk"] as const,
+  audit: ["audit"] as const,
+  auditReport: ["audit", "report"] as const,
+  plans: ["plans"] as const,
+  approvals: ["approvals"] as const,
+  executions: ["executions"] as const,
+  anomalies: ["anomalies"] as const,
+  forecast: ["forecast"] as const,
+  enrichedResources: ["resources", "enriched"] as const,
+  overview: ["overview"] as const,
+  scanStatus: ["scan", "status"] as const,
+};

@@ -21,3 +21,8 @@ certifi
 # Database (future phases)
 sqlalchemy
 psycopg2-binary
+
+# API
+fastapi
+uvicorn[standard]
+pydantic
