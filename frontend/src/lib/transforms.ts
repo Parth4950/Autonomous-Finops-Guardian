@@ -46,6 +46,11 @@ export function computeRiskDistribution(risk: RiskAssessmentItem[]) {
 
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "executed";
 
+/** AWS instance/volume IDs vs synthetic res-* identifiers. */
+export function isAwsResourceId(resourceId: string): boolean {
+  return /^(i-|vol-|snap-|eni-|nat-|eipalloc-)/.test(resourceId);
+}
+
 export function computeApprovalStats(approvals: ApprovalItem[]) {
   const stats = {
     total: approvals.length,

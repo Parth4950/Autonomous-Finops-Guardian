@@ -13,4 +13,5 @@ export const queryKeys = {
   enrichedResources: ["resources", "enriched"] as const,
   overview: ["overview"] as const,
   scanStatus: ["scan", "status"] as const,
+  scanSource: ["scan", "source"] as const,
 };

@@ -610,5 +610,626 @@
     "timestamp": "2026-06-07T12:03:30.202358+00:00",
     "actor": "dashboard-reviewer",
     "notes": "Requires additional validation."
+  },
+  {
+    "approval_id": "c536f4c7-8f48-4836-ab1b-b208d2522f31",
+    "resource_id": "res-healthy-004",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.581031+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "0f0bdd3f-5447-4468-97f5-21788da19a48",
+    "resource_id": "res-healthy-006",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.591897+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "9180e970-f185-42f4-b99a-ab81965c8c90",
+    "resource_id": "res-healthy-012",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.603111+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "c18efb20-5a51-4c18-b4a9-7164fac8c6f9",
+    "resource_id": "res-healthy-013",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.613830+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "3e28e6bd-ec79-497d-98fc-4e2a7a2b9717",
+    "resource_id": "res-zombie-002",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.644975+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "f381b366-51a6-4dbf-8e5f-e2d739ce1953",
+    "resource_id": "res-zombie-008",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.660032+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "cd7e4fa7-944d-475f-90a6-9578bed0ce68",
+    "resource_id": "res-zombie-009",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.670776+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "b16b7951-9a79-4faf-95b0-153ab8776059",
+    "resource_id": "res-zombie-016",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.687176+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "ff5f4984-b0f4-4ad2-affc-805485166e10",
+    "resource_id": "res-zombie-019",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T17:30:51.699979+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "d85c2a4f-b477-4a78-aa15-c86907b4a4ef",
+    "resource_id": "i-0a1913f217d016234",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T18:21:35.865932+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "e81eaff7-6252-4429-8c0f-21834dbe45fc",
+    "resource_id": "vol-0daed781993e2129c",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T18:21:35.881197+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "064ba79a-bddf-45c6-b0ac-47ba476c0463",
+    "resource_id": "vol-05af6bdd35accd003",
+    "previous_status": null,
+    "new_status": "pending",
+    "timestamp": "2026-06-16T18:21:35.896744+00:00",
+    "actor": "planner-agent",
+    "notes": "Approval request created from planner package."
+  },
+  {
+    "approval_id": "ece23742-415a-4455-a20f-80cc5302b42e",
+    "resource_id": "res-healthy-014",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.416774+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "f8d67843-3e83-4058-bf50-08056b762d50",
+    "resource_id": "res-healthy-017",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.428449+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "29ab3fca-03a6-41c1-9d07-943668a5aef5",
+    "resource_id": "res-healthy-020",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.441361+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "e62e6a49-2806-4ebb-aeff-94c10df588f2",
+    "resource_id": "res-healthy-023",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.459255+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "2cbda585-609e-420b-9d6c-8e56bc8e7d83",
+    "resource_id": "res-healthy-025",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.470421+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "1619add4-e57e-406b-a6a6-2123e9c28926",
+    "resource_id": "res-healthy-026",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.481144+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "b8cd7d28-5f10-4ca6-a546-fe1d5d3e8c02",
+    "resource_id": "res-healthy-028",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.492353+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "c6bc324d-193c-46ca-b5c6-c53012b61ef0",
+    "resource_id": "res-healthy-029",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.503396+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "919cb220-ca41-42a1-bf9c-98607f5a9399",
+    "resource_id": "res-healthy-030",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.514618+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "09f8cff4-a8d4-41eb-8e7f-5720a28a12b8",
+    "resource_id": "res-healthy-032",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.525899+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "704c1d1c-f052-48d6-8184-c79a8bdbd74c",
+    "resource_id": "res-healthy-033",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.537948+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "5264d56a-b03f-4fac-a053-379f406fe865",
+    "resource_id": "res-healthy-035",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.549573+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "e0ba02aa-d29d-4366-8499-ff6029cdd06f",
+    "resource_id": "res-healthy-036",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.561829+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "266d2553-c1c5-4f57-8d52-7dc6c3ddf02d",
+    "resource_id": "res-healthy-041",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.573741+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "055d240d-d753-495c-a7c1-8abc139abbbc",
+    "resource_id": "res-healthy-042",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.589141+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "17f9cf46-0906-438e-815c-38af702463ab",
+    "resource_id": "res-healthy-043",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.603228+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "82c2ff5c-e107-4eb6-8128-b3466d72835e",
+    "resource_id": "res-healthy-044",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.615227+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "e8880641-0100-4c17-8f33-d981a713e2a0",
+    "resource_id": "res-healthy-045",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.627129+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "9d47ad05-c344-46fd-9ea9-a7490bb0b97d",
+    "resource_id": "res-healthy-047",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.639037+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "42d3e573-5127-433f-a7d5-cf8740581381",
+    "resource_id": "res-healthy-048",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.650758+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "0a913f14-1536-4eb3-916c-0f762018374d",
+    "resource_id": "res-healthy-049",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.663875+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "e86481ea-1986-4b34-bfcc-1e1161e7b28c",
+    "resource_id": "res-healthy-054",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.676203+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "2e06efa5-22fa-4ad0-9d7c-0766069eab81",
+    "resource_id": "res-zombie-001",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.688994+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "2cb6bbca-1c6d-401e-8949-688f499ebb6b",
+    "resource_id": "res-zombie-003",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.702192+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "540e8c20-7408-44b7-a7b8-8dd8a2bdb8f3",
+    "resource_id": "res-zombie-004",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.715675+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "dfe7e9a5-9445-466f-a23c-a7c2b717499e",
+    "resource_id": "res-zombie-005",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.733716+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "d70bb40d-a85a-45d4-ad0a-7a58461ec8b1",
+    "resource_id": "res-zombie-006",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.745810+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "57cc9e24-321a-468e-9de5-761368dd9d33",
+    "resource_id": "res-zombie-007",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.757613+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "6e6e3dab-604c-430d-b396-65a01354ed99",
+    "resource_id": "res-zombie-010",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.769567+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "5430a202-8575-4182-a95b-311da6e650cd",
+    "resource_id": "res-zombie-011",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.781403+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "ba94ad89-4ab7-460c-b4aa-95aea92146e5",
+    "resource_id": "res-zombie-012",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.794491+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "97fd2b4b-1226-474a-bb9e-9d97d15c2dfc",
+    "resource_id": "res-zombie-013",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.807010+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "230fd730-b71d-4751-a44e-c2e497f85b4e",
+    "resource_id": "res-zombie-014",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.819032+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "b9c25b90-fa48-447a-907e-67b2eea3e8b5",
+    "resource_id": "res-zombie-015",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.831089+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "16829337-a75e-40f8-a01b-859249862885",
+    "resource_id": "res-zombie-017",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.843316+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "f9b10c16-920c-4433-b330-65d7b7379034",
+    "resource_id": "res-zombie-018",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.855960+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "00b30de5-718d-4171-9647-22099ca5b90c",
+    "resource_id": "res-zombie-020",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.868213+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "e2941ae8-e95d-47af-940f-0095d7b417b7",
+    "resource_id": "res-seasonal-001",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.880518+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "1b50ee98-132b-42ef-aa4a-3a2a89e86828",
+    "resource_id": "res-seasonal-004",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.892986+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "23089166-6ca7-44e6-959c-49cfbbfc8943",
+    "resource_id": "res-seasonal-007",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.905236+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "beaf0b42-5fd5-471e-a421-1c27166e50e3",
+    "resource_id": "res-seasonal-008",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.917545+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "d921a96a-79da-4a4d-a7f3-4f48574870df",
+    "resource_id": "res-seasonal-011",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.929873+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "54683254-a262-41c4-9d53-e7be918b0839",
+    "resource_id": "res-seasonal-014",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.942476+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "1fa0aba6-a05c-481d-8c2b-06f04885045b",
+    "resource_id": "res-seasonal-018",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.954930+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "6f5c6118-c7c7-400d-8d79-c5e1cfed9721",
+    "resource_id": "res-seasonal-020",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.967267+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "c536f4c7-8f48-4836-ab1b-b208d2522f31",
+    "resource_id": "res-healthy-004",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.979804+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "0f0bdd3f-5447-4468-97f5-21788da19a48",
+    "resource_id": "res-healthy-006",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:43.992310+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "9180e970-f185-42f4-b99a-ab81965c8c90",
+    "resource_id": "res-healthy-012",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.004839+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "c18efb20-5a51-4c18-b4a9-7164fac8c6f9",
+    "resource_id": "res-healthy-013",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.017113+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "3e28e6bd-ec79-497d-98fc-4e2a7a2b9717",
+    "resource_id": "res-zombie-002",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.029333+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "f381b366-51a6-4dbf-8e5f-e2d739ce1953",
+    "resource_id": "res-zombie-008",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.041704+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "cd7e4fa7-944d-475f-90a6-9578bed0ce68",
+    "resource_id": "res-zombie-009",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.054394+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "b16b7951-9a79-4faf-95b0-153ab8776059",
+    "resource_id": "res-zombie-016",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.067459+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "ff5f4984-b0f4-4ad2-affc-805485166e10",
+    "resource_id": "res-zombie-019",
+    "previous_status": "pending",
+    "new_status": "rejected",
+    "timestamp": "2026-06-16T18:26:44.080569+00:00",
+    "actor": "scan-orchestrator",
+    "notes": "Superseded \u2014 resource not in latest scan inventory."
+  },
+  {
+    "approval_id": "064ba79a-bddf-45c6-b0ac-47ba476c0463",
+    "resource_id": "vol-05af6bdd35accd003",
+    "previous_status": "pending",
+    "new_status": "approved",
+    "timestamp": "2026-06-16T18:28:00.025783+00:00",
+    "actor": "dashboard-reviewer",
+    "notes": "Approved via Approval Center"
+  },
+  {
+    "approval_id": "e81eaff7-6252-4429-8c0f-21834dbe45fc",
+    "resource_id": "vol-0daed781993e2129c",
+    "previous_status": "pending",
+    "new_status": "approved",
+    "timestamp": "2026-06-16T18:28:01.446776+00:00",
+    "actor": "dashboard-reviewer",
+    "notes": "Approved via Approval Center"
+  },
+  {
+    "approval_id": "d85c2a4f-b477-4a78-aa15-c86907b4a4ef",
+    "resource_id": "i-0a1913f217d016234",
+    "previous_status": "pending",
+    "new_status": "approved",
+    "timestamp": "2026-06-16T18:28:03.126321+00:00",
+    "actor": "dashboard-reviewer",
+    "notes": "Approved via Approval Center"
   }
 ]

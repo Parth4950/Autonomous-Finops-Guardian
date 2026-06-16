@@ -28,8 +28,9 @@ from backend.utils.aws_client import AWSClientError, AWSClientHelper, AWSConfigu
 logger = logging.getLogger(__name__)
 
 EC2_METRICS_NAMESPACE = "AWS/EC2"
-DEFAULT_LOOKBACK_DAYS = 7
-DEFAULT_METRIC_PERIOD_SECONDS = 3600  # 1 hour — keeps 7-day queries under API limits
+DEFAULT_LOOKBACK_DAYS = 14
+DEFAULT_METRIC_PERIOD_SECONDS = 3600  # 1 hour — keeps 14-day queries under API limits
+DAILY_METRIC_PERIOD_SECONDS = 86400  # 1 day — used for Prophet history export
 
 METRIC_DEFINITIONS: dict[str, str] = {
     "CPUUtilization": "avg_cpu",
@@ -202,6 +203,7 @@ class MetricsCollector:
         instance_id: str,
         metric_name: str,
         lookback_days: int | None = None,
+        period_seconds: int | None = None,
     ) -> list[MetricDatapoint]:
         """
         Retrieve raw CloudWatch metric datapoints for time-series analysis.
@@ -213,6 +215,7 @@ class MetricsCollector:
             instance_id: EC2 instance identifier.
             metric_name: CloudWatch metric name (e.g. ``CPUUtilization``).
             lookback_days: Optional override for the lookback window.
+            period_seconds: Optional CloudWatch aggregation period override.
 
         Returns:
             Chronologically sorted list of MetricDatapoint objects.
@@ -226,6 +229,7 @@ class MetricsCollector:
             metric_name=metric_name,
             start_time=start_time,
             end_time=end_time,
+            period_seconds=period_seconds,
         )
 
         series = [
@@ -245,6 +249,20 @@ class MetricsCollector:
             metric_name,
         )
         return series
+
+    def get_daily_metric_series(
+        self,
+        instance_id: str,
+        metric_name: str,
+        lookback_days: int | None = None,
+    ) -> list[MetricDatapoint]:
+        """Return daily CloudWatch datapoints for Prophet and trend analysis."""
+        return self.get_metric_series(
+            instance_id,
+            metric_name,
+            lookback_days=lookback_days,
+            period_seconds=DAILY_METRIC_PERIOD_SECONDS,
+        )
 
     def build_feature_vector(self, instance_id: str) -> dict[str, float | None]:
         """
@@ -330,6 +348,7 @@ class MetricsCollector:
         metric_name: str,
         start_time: datetime,
         end_time: datetime,
+        period_seconds: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         Call CloudWatch GetMetricStatistics for a single EC2 metric.
@@ -339,6 +358,7 @@ class MetricsCollector:
             metric_name: CloudWatch metric name.
             start_time: Query window start (UTC).
             end_time: Query window end (UTC).
+            period_seconds: Optional aggregation period override.
 
         Returns:
             Raw datapoint dictionaries from the CloudWatch response.
@@ -346,6 +366,7 @@ class MetricsCollector:
         Raises:
             AWSClientError: If the API call fails.
         """
+        period = period_seconds if period_seconds is not None else self._period_seconds
         try:
             response = self._cloudwatch_client.get_metric_statistics(
                 Namespace=EC2_METRICS_NAMESPACE,
@@ -353,7 +374,7 @@ class MetricsCollector:
                 Dimensions=[{"Name": "InstanceId", "Value": instance_id}],
                 StartTime=start_time,
                 EndTime=end_time,
-                Period=self._period_seconds,
+                Period=period,
                 Statistics=["Average"],
             )
             return response.get("Datapoints", [])

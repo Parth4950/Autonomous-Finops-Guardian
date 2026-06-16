@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { fetchScanStatus, startCloudScan } from "@/api/scan";
+import type { ScanMode } from "@/api/types";
 import { useToast } from "@/components/ui/toast";
 import { queryKeys } from "@/hooks/queryKeys";
 
@@ -11,60 +12,51 @@ const REFRESH_KEYS = [
   queryKeys.audit,
   queryKeys.auditReport,
   queryKeys.plans,
+  queryKeys.approvals,
+  queryKeys.executions,
   queryKeys.enrichedResources,
   queryKeys.overview,
   queryKeys.anomalies,
   queryKeys.forecast,
+  queryKeys.scanSource,
 ] as const;
-
-export function useScanStatus(enabled: boolean) {
-  return useQuery({
-    queryKey: queryKeys.scanStatus,
-    queryFn: fetchScanStatus,
-    enabled,
-    refetchInterval: enabled ? 1000 : false,
-    retry: 3,
-    retryDelay: 1500,
-  });
-}
 
 export function useCloudScan() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const [isPolling, setIsPolling] = useState(false);
+  const previousStatusRef = useRef<string | undefined>(undefined);
+
+  const statusQuery = useQuery({
+    queryKey: queryKeys.scanStatus,
+    queryFn: fetchScanStatus,
+    refetchInterval: (query) => (query.state.data?.status === "running" ? 1000 : false),
+    staleTime: 0,
+  });
+
+  const status = statusQuery.data?.status ?? "idle";
+  const isScanning = status === "running";
 
   const startMutation = useMutation({
-    mutationFn: startCloudScan,
-    onSuccess: () => {
-      setIsPolling(true);
-      toast.info("Scan Started", "Running cloud FinOps pipeline…");
+    mutationFn: (mode: ScanMode) => startCloudScan(mode),
+    onSuccess: (_data, mode) => {
+      const label = mode === "aws" ? "Live AWS scan started" : "Synthetic scan started";
+      toast.info("Scan Started", `${label} — running FinOps pipeline…`);
       void queryClient.invalidateQueries({ queryKey: queryKeys.scanStatus });
     },
     onError: (error: Error) => {
-      setIsPolling(false);
+      if (/already in progress/i.test(error.message)) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.scanStatus });
+        return;
+      }
       toast.error("Scan Failed", error.message);
     },
   });
 
-  const statusQuery = useScanStatus(isPolling || startMutation.isPending);
-
   useEffect(() => {
-    if (!isPolling || !statusQuery.isError) return;
+    const previousStatus = previousStatusRef.current;
+    previousStatusRef.current = status;
 
-    setIsPolling(false);
-    toast.error(
-      "Scan Failed",
-      statusQuery.error?.message ?? "Lost connection while polling scan status."
-    );
-  }, [isPolling, statusQuery.isError, statusQuery.error, toast]);
-
-  useEffect(() => {
-    if (!isPolling) return;
-
-    const status = statusQuery.data?.status;
-    if (!status || status === "running" || status === "idle") return;
-
-    setIsPolling(false);
+    if (previousStatus !== "running") return;
 
     if (status === "completed") {
       toast.success("Scan Completed", "Dashboard data refreshed from latest pipeline run.");
@@ -74,17 +66,23 @@ export function useCloudScan() {
     } else if (status === "failed") {
       toast.error("Scan Failed", statusQuery.data?.error ?? "Pipeline execution failed.");
     }
-  }, [isPolling, statusQuery.data, queryClient, toast]);
+  }, [status, statusQuery.data?.error, queryClient, toast]);
 
-  const isScanning =
-    startMutation.isPending || isPolling || statusQuery.data?.status === "running";
+  useEffect(() => {
+    if (!statusQuery.isError) return;
+    toast.error(
+      "Scan Failed",
+      statusQuery.error?.message ?? "Lost connection while polling scan status."
+    );
+  }, [statusQuery.isError, statusQuery.error, toast]);
 
   return {
-    startScan: () => startMutation.mutate(),
-    isScanning,
+    startScan: (mode: ScanMode = "synthetic") => startMutation.mutate(mode),
+    isScanning: isScanning || startMutation.isPending,
     progress: statusQuery.data?.progress ?? (startMutation.isPending ? 5 : 0),
     currentStep: statusQuery.data?.current_step,
-    scanStatus: statusQuery.data?.status ?? "idle",
+    scanStatus: status,
+    scanMode: statusQuery.data?.scan_mode ?? startMutation.variables ?? null,
     isStarting: startMutation.isPending,
   };
 }

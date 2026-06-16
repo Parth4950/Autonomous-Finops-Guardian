@@ -213,13 +213,18 @@ class ExecutionService:
         rollbacks: dict[str, list[str]],
     ) -> ExecutionItem:
         risk = risk_map.get(approval.resource_id, {})
+        updated_at = approval.updated_at
         return ExecutionItem(
             execution_id=f"pending-{approval.approval_id}",
             approval_id=approval.approval_id,
             resource_id=approval.resource_id,
             action=approval.action,
             status="pending",
-            timestamp=approval.updated_at,
+            timestamp=(
+                updated_at.isoformat()
+                if hasattr(updated_at, "isoformat")
+                else str(updated_at)
+            ),
             estimated_savings=float(approval.estimated_savings),
             mode="simulation",
             execution_steps=list(approval.execution_steps),

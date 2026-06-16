@@ -7,6 +7,7 @@ classifies forecast trends, and estimates waste probability.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 import warnings
@@ -37,12 +38,14 @@ DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
 DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
 DEFAULT_HISTORICAL_PATH = DEFAULT_DATA_DIR / "historical_cpu_usage.csv"
 DEFAULT_FORECAST_RESULTS_PATH = DEFAULT_RESULTS_DIR / "forecast_results.csv"
+DEFAULT_FORECAST_SERIES_CACHE_PATH = DEFAULT_RESULTS_DIR / "forecast_series_cache.json"
 
 RANDOM_SEED = 42
 HISTORY_DAYS = 90
 FORECAST_DAYS = 30
 TOTAL_RESOURCES = 100
 TOP_N_WASTE = 20
+MIN_PROPHET_POINTS = 7
 
 RESOURCE_COUNTS: dict[str, int] = {
     "healthy": 60,
@@ -246,6 +249,64 @@ class ProphetForecaster:
         prophet_frame.columns = ["ds", "y"]
         return prophet_frame.sort_values("ds")
 
+    def _resource_type(self, resource_frame: pd.DataFrame) -> str:
+        if "resource_type" in resource_frame.columns and not resource_frame.empty:
+            return str(resource_frame["resource_type"].iloc[0])
+        return "aws"
+
+    def _heuristic_forecast(
+        self,
+        resource_id: str,
+        resource_frame: pd.DataFrame,
+        prophet_frame: pd.DataFrame,
+    ) -> dict[str, Any]:
+        """Flat-line forecast when CloudWatch history is too short for Prophet."""
+        historical_avg_cpu = round(float(prophet_frame["y"].mean()), 2) if len(prophet_frame) else 0.0
+        forecast_avg_cpu = historical_avg_cpu
+        forecast_min_cpu = historical_avg_cpu
+        forecast_max_cpu = historical_avg_cpu
+
+        if prophet_frame.empty:
+            last_date = pd.Timestamp.utcnow().normalize()
+            history_part = pd.DataFrame(columns=["ds", "yhat", "yhat_lower", "yhat_upper"])
+        else:
+            last_date = pd.to_datetime(prophet_frame["ds"].max())
+            history_part = prophet_frame.rename(columns={"y": "yhat"}).copy()
+            history_part["yhat_lower"] = history_part["yhat"]
+            history_part["yhat_upper"] = history_part["yhat"]
+
+        future_dates = pd.date_range(
+            last_date + pd.Timedelta(days=1),
+            periods=self._forecast_days,
+            freq="D",
+        )
+        future = pd.DataFrame(
+            {
+                "ds": future_dates,
+                "yhat": forecast_avg_cpu,
+                "yhat_lower": max(0.0, forecast_avg_cpu - 5.0),
+                "yhat_upper": min(100.0, forecast_avg_cpu + 5.0),
+            }
+        )
+        self._forecast_details[resource_id] = pd.concat([history_part, future], ignore_index=True)
+
+        utilization_category = self.classify_utilization(forecast_avg_cpu)
+        waste_probability = self.classify_waste_probability(
+            historical_avg_cpu=historical_avg_cpu,
+            forecast_avg_cpu=forecast_avg_cpu,
+        )
+
+        return {
+            "resource_id": resource_id,
+            "resource_type": self._resource_type(resource_frame),
+            "historical_avg_cpu": historical_avg_cpu,
+            "forecast_avg_cpu": forecast_avg_cpu,
+            "forecast_min_cpu": forecast_min_cpu,
+            "forecast_max_cpu": forecast_max_cpu,
+            "utilization_category": utilization_category,
+            "waste_probability": waste_probability,
+        }
+
     def forecast_resource(self, resource_id: str, resource_frame: pd.DataFrame) -> dict[str, Any]:
         """
         Train Prophet and forecast CPU for a single resource.
@@ -258,26 +319,39 @@ class ProphetForecaster:
             Dictionary with forecast metrics and classifications.
         """
         prophet_frame = self._prepare_prophet_frame(resource_frame)
+
+        if prophet_frame.empty or len(prophet_frame) < MIN_PROPHET_POINTS:
+            logger.info(
+                "Using heuristic forecast for %s (%d day(s) of CPU history)",
+                resource_id,
+                len(prophet_frame),
+            )
+            return self._heuristic_forecast(resource_id, resource_frame, prophet_frame)
+
         historical_avg_cpu = round(float(prophet_frame["y"].mean()), 2)
 
-        model = Prophet(
-            daily_seasonality=False,
-            weekly_seasonality=True,
-            yearly_seasonality=False,
-            changepoint_prior_scale=0.05,
-        )
-        model.fit(prophet_frame)
+        try:
+            model = Prophet(
+                daily_seasonality=False,
+                weekly_seasonality=len(prophet_frame) >= 14,
+                yearly_seasonality=False,
+                changepoint_prior_scale=0.05,
+            )
+            model.fit(prophet_frame)
 
-        future = model.make_future_dataframe(periods=self._forecast_days, freq="D")
-        forecast = model.predict(future)
-        forecast["yhat"] = forecast["yhat"].clip(0, 100)
+            future = model.make_future_dataframe(periods=self._forecast_days, freq="D")
+            forecast = model.predict(future)
+            forecast["yhat"] = forecast["yhat"].clip(0, 100)
 
-        forecast_tail = forecast.tail(self._forecast_days)
-        forecast_avg_cpu = round(float(forecast_tail["yhat"].mean()), 2)
-        forecast_min_cpu = round(float(forecast_tail["yhat"].min()), 2)
-        forecast_max_cpu = round(float(forecast_tail["yhat"].max()), 2)
+            forecast_tail = forecast.tail(self._forecast_days)
+            forecast_avg_cpu = round(float(forecast_tail["yhat"].mean()), 2)
+            forecast_min_cpu = round(float(forecast_tail["yhat"].min()), 2)
+            forecast_max_cpu = round(float(forecast_tail["yhat"].max()), 2)
 
-        self._forecast_details[resource_id] = forecast.copy()
+            self._forecast_details[resource_id] = forecast.copy()
+        except Exception as exc:
+            logger.warning("Prophet failed for %s, using heuristic forecast: %s", resource_id, exc)
+            return self._heuristic_forecast(resource_id, resource_frame, prophet_frame)
 
         utilization_category = self.classify_utilization(forecast_avg_cpu)
         waste_probability = self.classify_waste_probability(
@@ -287,7 +361,7 @@ class ProphetForecaster:
 
         return {
             "resource_id": resource_id,
-            "resource_type": resource_frame["resource_type"].iloc[0],
+            "resource_type": self._resource_type(resource_frame),
             "historical_avg_cpu": historical_avg_cpu,
             "forecast_avg_cpu": forecast_avg_cpu,
             "forecast_min_cpu": forecast_min_cpu,
@@ -328,6 +402,11 @@ class ProphetForecaster:
                 logger.info("Forecast progress: %d / %d", index, len(resource_ids))
 
         results_frame = pd.DataFrame(results)
+        if results_frame.empty:
+            raise HistoricalDataError(
+                f"Forecasting failed for all {len(resource_ids)} resource(s). "
+                "Verify CloudWatch CPU metrics are available for discovered EC2 instances."
+            )
         logger.info("Forecasting complete for %d resources", len(results_frame))
         return results_frame
 
@@ -336,6 +415,72 @@ class ProphetForecaster:
         if resource_id not in self._forecast_details:
             raise KeyError(f"No forecast detail stored for resource: {resource_id}")
         return self._forecast_details[resource_id]
+
+    def save_series_cache(
+        self,
+        historical_data: pd.DataFrame,
+        output_path: Path = DEFAULT_FORECAST_SERIES_CACHE_PATH,
+    ) -> Path:
+        """Persist per-resource chart series so export does not retrain Prophet models."""
+        chart_data = {
+            resource_id: build_resource_chart_series(
+                historical_data,
+                self._forecast_details[resource_id],
+                resource_id,
+            )
+            for resource_id in self._forecast_details
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(chart_data), encoding="utf-8")
+        logger.info("Saved forecast series cache for %d resources to %s", len(chart_data), output_path)
+        return output_path
+
+
+def build_resource_chart_series(
+    historical: pd.DataFrame,
+    forecast_detail: pd.DataFrame,
+    resource_id: str,
+    forecast_days: int = FORECAST_DAYS,
+) -> dict[str, Any]:
+    """Build dashboard chart payload for one resource from stored Prophet output."""
+    history = historical[historical["resource_id"] == resource_id].sort_values("date")
+    forecast = forecast_detail.copy()
+    forecast["ds"] = pd.to_datetime(forecast["ds"])
+    forecast_tail = forecast.tail(forecast_days)
+    last_history_date = pd.to_datetime(history["date"].max())
+
+    return {
+        "forecast_start": last_history_date.date().isoformat(),
+        "historical": [
+            {
+                "date": pd.to_datetime(row["date"]).date().isoformat(),
+                "cpu": round(float(row["cpu_utilization"]), 2),
+            }
+            for _, row in history.iterrows()
+        ],
+        "forecast": [
+            {
+                "date": row["ds"].date().isoformat(),
+                "cpu": round(float(row["yhat"]), 2),
+                "lower": round(float(max(0, row["yhat_lower"])), 2),
+                "upper": round(float(min(100, row["yhat_upper"])), 2),
+            }
+            for _, row in forecast_tail.iterrows()
+        ],
+    }
+
+
+def load_forecast_series_cache(
+    cache_path: Path = DEFAULT_FORECAST_SERIES_CACHE_PATH,
+) -> dict[str, Any]:
+    """Load cached chart series written during the Prophet pipeline step."""
+    if not cache_path.exists():
+        raise FileNotFoundError(f"Forecast series cache not found at {cache_path}")
+    with open(cache_path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError("Forecast series cache must be a JSON object.")
+    return payload
 
 
 class ForecastAnalyzer:
@@ -444,10 +589,22 @@ class ForecastVisualizer:
         output_path = self._figures_dir / "actual_vs_forecast.png"
         sample_ids = []
 
-        for resource_type in ["healthy", "zombie", "seasonal"]:
+        for resource_type in ["healthy", "zombie", "seasonal", "aws"]:
             matches = results[results["resource_type"] == resource_type]
             if not matches.empty:
                 sample_ids.append(matches.iloc[0]["resource_id"])
+
+        if not sample_ids:
+            sample_ids = results["resource_id"].head(min(3, len(results))).tolist()
+
+        if not sample_ids:
+            output_path = self._figures_dir / "actual_vs_forecast.png"
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.text(0.5, 0.5, "No forecast samples available", ha="center", va="center")
+            ax.axis("off")
+            fig.savefig(output_path, dpi=150)
+            plt.close(fig)
+            return output_path
 
         fig, axes = plt.subplots(len(sample_ids), 1, figsize=(12, 4 * len(sample_ids)))
         if len(sample_ids) == 1:
@@ -502,17 +659,31 @@ class ForecastVisualizer:
     def _plot_forecast_trend(self, results: pd.DataFrame) -> Path:
         """Plot forecast average CPU distribution by resource type."""
         output_path = self._figures_dir / "forecast_trend.png"
-        palette = {"healthy": "#2ecc71", "zombie": "#e74c3c", "seasonal": "#3498db"}
+        palette = {"healthy": "#2ecc71", "zombie": "#e74c3c", "seasonal": "#3498db", "aws": "#9b59b6"}
 
         fig, ax = plt.subplots(figsize=(10, 6))
+        plotted = False
         for resource_type, color in palette.items():
             subset = results[results["resource_type"] == resource_type]
+            if subset.empty:
+                continue
+            plotted = True
             ax.hist(
                 subset["forecast_avg_cpu"],
-                bins=20,
+                bins=max(5, min(20, len(subset))),
                 alpha=0.6,
                 label=f"{resource_type} (n={len(subset)})",
                 color=color,
+                edgecolor="white",
+            )
+
+        if not plotted:
+            ax.hist(
+                results["forecast_avg_cpu"],
+                bins=max(5, min(20, len(results))),
+                alpha=0.6,
+                label=f"all (n={len(results)})",
+                color="#3498db",
                 edgecolor="white",
             )
 
@@ -617,8 +788,38 @@ class ForecastingPipeline:
         """Execute generate → forecast → analyze → export → visualize."""
         historical_data = self._data_generator.generate()
         self._data_generator.save(historical_data, self._historical_path)
+        return self._run_forecast(historical_data)
 
+    def run_from_existing_history(self) -> pd.DataFrame:
+        """Forecast using CloudWatch-derived CPU history from an AWS scan."""
+        if not self._historical_path.exists():
+            raise HistoricalDataError(
+                f"Historical CPU data not found at {self._historical_path}. "
+                "Run agents/scout/export_resources.py first."
+            )
+
+        historical_data = pd.read_csv(self._historical_path, parse_dates=["date"])
+        required = {"resource_id", "date", "cpu_utilization"}
+        if not required.issubset(historical_data.columns):
+            raise HistoricalDataError(
+                f"Historical data missing columns: {required - set(historical_data.columns)}"
+            )
+
+        if "resource_type" not in historical_data.columns:
+            historical_data = historical_data.copy()
+            historical_data["resource_type"] = "aws"
+
+        logger.info(
+            "Using existing CPU history — %d rows across %d resources",
+            len(historical_data),
+            historical_data["resource_id"].nunique(),
+        )
+        return self._run_forecast(historical_data)
+
+    def _run_forecast(self, historical_data: pd.DataFrame) -> pd.DataFrame:
+        """Train Prophet models and export forecast artifacts."""
         results = self._forecaster.forecast_all(historical_data)
+        self._forecaster.save_series_cache(historical_data)
         summary = ForecastAnalyzer.summarize(results)
         top_waste = ForecastAnalyzer.get_top_waste_candidates(results)
 
@@ -673,7 +874,13 @@ def main() -> int:
     _configure_logging()
 
     try:
-        ForecastingPipeline().run()
+        from agents.scout.resource_exporter import is_aws_scan_mode
+
+        pipeline = ForecastingPipeline()
+        if is_aws_scan_mode():
+            pipeline.run_from_existing_history()
+        else:
+            pipeline.run()
         return 0
     except HistoricalDataError as exc:
         logger.error("Historical data error: %s", exc)

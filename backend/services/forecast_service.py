@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from backend.models.paths import FORECAST_DASHBOARD_JSON, FORECAST_DASHBOARD_FALLBACK
+from backend.models.paths import FORECAST_DASHBOARD_JSON
 from backend.schemas.forecast import ForecastDashboardResponse
 from backend.services.data_loader import DataNotFoundError
 
@@ -20,11 +20,10 @@ class ForecastService:
 
     @staticmethod
     def _load_dashboard_json() -> dict:
-        for path in (FORECAST_DASHBOARD_JSON, FORECAST_DASHBOARD_FALLBACK):
-            if path.exists():
-                with open(path, encoding="utf-8") as handle:
-                    return json.load(handle)
+        if not FORECAST_DASHBOARD_JSON.exists():
+            raise DataNotFoundError(
+                "Forecast dashboard data not found. Run ml/forecasting/export_forecast_json.py first."
+            )
 
-        raise DataNotFoundError(
-            "Forecast dashboard data not found. Run ml/forecasting/export_forecast_json.py first."
-        )
+        with open(FORECAST_DASHBOARD_JSON, encoding="utf-8") as handle:
+            return json.load(handle)

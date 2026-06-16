@@ -40,7 +40,7 @@ The platform uses modular agents, a FastAPI backend, and a React operator dashbo
 | Executor Agent | ✅ Done | Simulation mode + rollback planning |
 | FastAPI backend | ✅ Done | REST API over agent pipeline outputs |
 | React dashboard | ✅ Done | Full operator UI with live API data |
-| Live Cloud Scan | ✅ Done | Re-run pipeline from Overview (UI button) |
+| Live Cloud Scan | ✅ Done | Synthetic or Live AWS pipeline from Overview |
 | LangGraph orchestration | 🔜 Planned | Stateful agent workflow |
 
 ---
@@ -245,16 +245,32 @@ Open **http://localhost:5173**. API docs: **http://127.0.0.1:8000/docs**
 
 ## Live Cloud Scan
 
-The **Run Cloud Scan** button on the Overview page triggers `POST /scan/start`, which re-runs the local FinOps pipeline in the background:
+The **Run Cloud Scan** button on the Overview page triggers `POST /scan/start` with a selectable mode:
 
-1. Regenerate synthetic resources
+| Mode | Discovery step | Data source |
+|------|----------------|-------------|
+| **Synthetic** (default) | `synthetic_data/generate_resources.py` | 550 labeled local resources |
+| **Live AWS** | `agents/scout/export_resources.py` | Real EC2/EBS + 14-day CloudWatch CPU history |
+
+Both modes run the full FinOps pipeline in the background:
+
+1. Resource discovery (synthetic generator **or** Scout Agent)
 2. Isolation Forest detection
 3. Prophet forecasting + export
 4. Risk assessment
 5. Financial audit
 6. Remediation planning
+7. Approval queue ingest (supersedes stale pending items)
 
-This refreshes dashboard data from updated CSV/JSON outputs. It does **not** call the Scout Agent or live AWS today — Scout remains available via CLI for real discovery.
+`GET /scan/source` and `synthetic_data/scan_source.json` record the last scan mode. The dashboard sidebar and banners read this marker so labels stay accurate after a live AWS scan.
+
+**Safety:** Remediation execution remains in simulation mode by default (`EXECUTION_MODE=simulation`). Live AWS discovery does not terminate or modify infrastructure.
+
+```bash
+# API
+curl -X POST http://127.0.0.1:8000/scan/start -H "Content-Type: application/json" -d "{\"mode\":\"aws\"}"
+curl http://127.0.0.1:8000/scan/source
+```
 
 ---
 

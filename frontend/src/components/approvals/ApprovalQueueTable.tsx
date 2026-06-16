@@ -22,16 +22,20 @@ import type { ApprovalItem } from "@/lib/api/types";
 import {
   formatAction,
   formatTimestamp,
+  isAwsResourceId,
   riskBadgeVariant,
 } from "@/lib/transforms";
 import { formatCurrency } from "@/lib/utils";
-import { Check, Loader2, Search, ShieldAlert, X } from "lucide-react";
+import { Check, Cloud, Database, Loader2, Play, Search, ShieldAlert, X } from "lucide-react";
 
 interface ApprovalQueueTableProps {
   data: ApprovalItem[];
   loadingId: string | null;
+  currentInventoryOnly: boolean;
+  onCurrentInventoryOnlyChange: (value: boolean) => void;
   onApprove: (approvalId: string) => void;
   onReject: (approvalId: string) => void;
+  onExecute: (approvalId: string) => void;
 }
 
 const PAGE_SIZE = 10;
@@ -39,15 +43,25 @@ const PAGE_SIZE = 10;
 export function ApprovalQueueTable({
   data,
   loadingId,
+  currentInventoryOnly,
+  onCurrentInventoryOnlyChange,
   onApprove,
   onReject,
+  onExecute,
 }: ApprovalQueueTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("pending");
   const [page, setPage] = useState(0);
 
+  const sorted = useMemo(() => {
+    return [...data].sort(
+      (left, right) =>
+        new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    );
+  }, [data]);
+
   const filtered = useMemo(() => {
-    return data.filter((row) => {
+    return sorted.filter((row) => {
       const matchesSearch =
         search === "" ||
         row.resource_id.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,7 +69,7 @@ export function ApprovalQueueTable({
       const matchesStatus = statusFilter === "all" || row.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [data, search, statusFilter]);
+  }, [sorted, search, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageData = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
@@ -94,6 +108,19 @@ export function ApprovalQueueTable({
             <SelectItem value="executed">Executed</SelectItem>
           </SelectContent>
         </Select>
+
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={currentInventoryOnly}
+            onChange={(event) => {
+              onCurrentInventoryOnlyChange(event.target.checked);
+              setPage(0);
+            }}
+            className="rounded border-border"
+          />
+          Current inventory only
+        </label>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border">
@@ -112,13 +139,27 @@ export function ApprovalQueueTable({
           <TableBody>
             {pageData.map((row) => {
               const isPending = row.status === "pending";
+              const isApproved = row.status === "approved";
               const isLoading = loadingId === row.approval_id;
 
               return (
                 <TableRow key={row.approval_id} className="group">
                   <TableCell>
                     <div className="space-y-1">
-                      <p className="font-mono text-xs font-medium">{row.resource_id}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-mono text-xs font-medium">{row.resource_id}</p>
+                        {isAwsResourceId(row.resource_id) ? (
+                          <Badge variant="outline" className="gap-1 border-sky-500/30 text-[10px] text-sky-300">
+                            <Cloud className="h-3 w-3" />
+                            AWS
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground">
+                            <Database className="h-3 w-3" />
+                            Synthetic
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-[10px] text-muted-foreground">
                         {row.approval_id.slice(0, 8)}…
                       </p>
@@ -176,6 +217,23 @@ export function ApprovalQueueTable({
                             <X className="h-3 w-3" />
                           )}
                           Reject
+                        </Button>
+                      </div>
+                    ) : isApproved ? (
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isLoading}
+                          className="h-8 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                          onClick={() => onExecute(row.approval_id)}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Play className="h-3 w-3" />
+                          )}
+                          Execute
                         </Button>
                       </div>
                     ) : (

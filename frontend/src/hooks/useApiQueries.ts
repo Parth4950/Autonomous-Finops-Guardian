@@ -9,6 +9,7 @@ import { fetchPlans } from "@/api/plans";
 import { fetchApprovals } from "@/api/approvals";
 import { fetchResources } from "@/api/resources";
 import { fetchRisk } from "@/api/risk";
+import { fetchScanSource } from "@/api/scan";
 import { fetchWaste } from "@/api/waste";
 import { queryKeys } from "@/hooks/queryKeys";
 
@@ -16,6 +17,16 @@ export function useHealth() {
   return useQuery({
     queryKey: queryKeys.health,
     queryFn: fetchHealth,
+    staleTime: 15_000,
+    refetchInterval: 15_000,
+    retry: 1,
+  });
+}
+
+export function useScanSource() {
+  return useQuery({
+    queryKey: queryKeys.scanSource,
+    queryFn: fetchScanSource,
     staleTime: 30_000,
   });
 }

@@ -21,6 +21,7 @@ export function useApproveMutation() {
     }) => approveRemediation(approvalId, { reviewer, notes }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.approvals });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.executions });
       void queryClient.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });
@@ -41,6 +42,7 @@ export function useRejectMutation() {
     }) => rejectRemediation(approvalId, { reviewer, notes }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.approvals });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.executions });
       void queryClient.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });

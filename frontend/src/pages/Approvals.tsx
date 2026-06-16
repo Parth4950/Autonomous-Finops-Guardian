@@ -1,35 +1,54 @@
 import { ApprovalStatusBadge } from "@/components/approvals/ApprovalStatusBadge";
 import { ApprovalHistoryTimeline } from "@/components/approvals/ApprovalHistoryTimeline";
 import { ApprovalQueueTable } from "@/components/approvals/ApprovalQueueTable";
+import { RejectApprovalModal } from "@/components/approvals/RejectApprovalModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard, PageHeader } from "@/components/shared/PageHeader";
 import { QueryState } from "@/components/shared/QueryState";
-import { useApproveMutation, useRejectMutation } from "@/hooks/useApprovalMutations";
-import { useApprovalsQuery } from "@/hooks/useApiQueries";
+import { useApproveMutation, useExecuteMutation, useRejectMutation } from "@/hooks/useApprovalMutations";
+import { useApprovalsQuery, useResources, useScanSource } from "@/hooks/useApiQueries";
 import { buildApprovalHistory, computeApprovalStats } from "@/lib/transforms";
 import { formatCurrency } from "@/lib/utils";
-import { CheckCircle2, Clock, Shield, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Clock, Cloud, Shield, XCircle, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const WORKFLOW_STEPS = [
   { key: "pending", label: "Pending Review", icon: Clock },
-  { key: "approved", label: "Approved", icon: CheckCircle2 },
+  { key: "approved", label: "Approved + Executed", icon: CheckCircle2 },
   { key: "executed", label: "Executed", icon: Zap },
 ] as const;
 
 export default function ApprovalsPage() {
   const { data = [], isLoading, isError, error, refetch, isFetching } = useApprovalsQuery();
+  const { data: resources = [] } = useResources();
+  const { data: scanSource } = useScanSource();
   const approveMutation = useApproveMutation();
   const rejectMutation = useRejectMutation();
+  const executeMutation = useExecuteMutation();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<{ approvalId: string; resourceId: string } | null>(
+    null
+  );
+  const [currentInventoryOnly, setCurrentInventoryOnly] = useState(true);
 
-  const stats = useMemo(() => computeApprovalStats(data), [data]);
-  const history = useMemo(() => buildApprovalHistory(data), [data]);
-  const loadingId =
-    approveMutation.isPending
-      ? approveMutation.variables?.approvalId ?? null
-      : rejectMutation.isPending
-        ? rejectMutation.variables?.approvalId ?? null
+  const activeResourceIds = useMemo(
+    () => new Set(resources.map((resource) => resource.resource_id)),
+    [resources]
+  );
+
+  const scopedApprovals = useMemo(() => {
+    if (!currentInventoryOnly || activeResourceIds.size === 0) return data;
+    return data.filter((item) => activeResourceIds.has(item.resource_id));
+  }, [activeResourceIds, currentInventoryOnly, data]);
+
+  const stats = useMemo(() => computeApprovalStats(scopedApprovals), [scopedApprovals]);
+  const history = useMemo(() => buildApprovalHistory(scopedApprovals), [scopedApprovals]);
+  const loadingId = approveMutation.isPending
+    ? approveMutation.variables?.approvalId ?? null
+    : rejectMutation.isPending
+      ? rejectMutation.variables?.approvalId ?? null
+      : executeMutation.isPending
+        ? executeMutation.variables ?? null
         : null;
 
   async function handleApprove(approvalId: string) {
@@ -48,14 +67,24 @@ export default function ApprovalsPage() {
     }
   }
 
-  async function handleReject(approvalId: string) {
+  function handleRejectRequest(approvalId: string) {
+    const record = data.find((item) => item.approval_id === approvalId);
     setMessage(null);
-    const notes =
-      window.prompt("Rejection notes (optional):", "Requires additional validation.") ??
-      "Rejected via Approval Center";
+    setRejectTarget({
+      approvalId,
+      resourceId: record?.resource_id ?? approvalId,
+    });
+  }
+
+  async function handleRejectConfirm(notes: string) {
+    if (!rejectTarget) return;
 
     try {
-      const updated = await rejectMutation.mutateAsync({ approvalId, notes });
+      const updated = await rejectMutation.mutateAsync({
+        approvalId: rejectTarget.approvalId,
+        notes,
+      });
+      setRejectTarget(null);
       setMessage({ type: "success", text: `Rejected remediation for ${updated.resource_id}` });
     } catch (err) {
       setMessage({
@@ -65,8 +94,37 @@ export default function ApprovalsPage() {
     }
   }
 
+  async function handleExecute(approvalId: string) {
+    setMessage(null);
+    const confirmed = window.confirm(
+      "Execute this approved remediation in simulation mode? No real AWS changes will be made."
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await executeMutation.mutateAsync(approvalId);
+      setMessage({
+        type: "success",
+        text: `Execution ${result.execution_id.slice(0, 8)}… completed (${result.status})`,
+      });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Execution failed",
+      });
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <RejectApprovalModal
+        open={rejectTarget !== null}
+        resourceId={rejectTarget?.resourceId ?? null}
+        isSubmitting={rejectMutation.isPending}
+        onClose={() => !rejectMutation.isPending && setRejectTarget(null)}
+        onConfirm={handleRejectConfirm}
+      />
+
       <PageHeader
         title="Approval Center"
         description="Human-in-the-loop governance — review remediation plans before execution"
@@ -92,14 +150,32 @@ export default function ApprovalsPage() {
         </div>
       )}
 
+      {scanSource?.mode === "aws" && (
+        <div className="flex items-start gap-3 rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+          <Cloud className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Showing approvals from your latest AWS scan</p>
+            <p className="text-xs text-sky-200/80">
+              {scanSource.resource_count ?? activeResourceIds.size} resource(s) in{" "}
+              {scanSource.region ?? "AWS"} — stale synthetic queue items are hidden when
+              &quot;Current inventory&quot; is on.
+            </p>
+          </div>
+        </div>
+      )}
+
       <QueryState
         isLoading={isLoading}
         isError={isError}
         error={error}
         onRetry={() => void refetch()}
-        isEmpty={!isLoading && data.length === 0}
+        isEmpty={!isLoading && scopedApprovals.length === 0}
         loadingMessage="Loading approval queue..."
-        emptyMessage="No approval requests in the queue."
+        emptyMessage={
+          currentInventoryOnly
+            ? "No approval requests for resources in the current inventory."
+            : "No approval requests in the queue."
+        }
       >
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -174,10 +250,13 @@ export default function ApprovalsPage() {
             </CardHeader>
             <CardContent>
               <ApprovalQueueTable
-                data={data}
+                data={scopedApprovals}
                 loadingId={loadingId}
+                currentInventoryOnly={currentInventoryOnly}
+                onCurrentInventoryOnlyChange={setCurrentInventoryOnly}
                 onApprove={handleApprove}
-                onReject={handleReject}
+                onReject={handleRejectRequest}
+                onExecute={handleExecute}
               />
             </CardContent>
           </Card>

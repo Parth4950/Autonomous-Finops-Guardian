@@ -193,10 +193,42 @@ class WasteScoreEngine:
             ),
             axis=1,
         )
-        enriched["monthly_cost"] = enriched["resource_id"].apply(
-            cls._estimate_monthly_cost
-        )
+        cost_map = cls._load_resource_costs()
+        if cost_map:
+            enriched["monthly_cost"] = enriched["resource_id"].map(cost_map)
+            missing_cost = enriched["monthly_cost"].isna()
+            enriched.loc[missing_cost, "monthly_cost"] = enriched.loc[
+                missing_cost, "resource_id"
+            ].apply(cls._estimate_monthly_cost)
+        else:
+            enriched["monthly_cost"] = enriched["resource_id"].apply(
+                cls._estimate_monthly_cost
+            )
         return enriched
+
+    @staticmethod
+    def _load_resource_costs() -> dict[str, float]:
+        """Load actual monthly costs from inventory when running an AWS scan."""
+        try:
+            from agents.scout.resource_exporter import is_aws_scan_mode
+
+            if not is_aws_scan_mode():
+                return {}
+
+            inventory_path = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
+            if not inventory_path.exists():
+                return {}
+
+            inventory = pd.read_csv(inventory_path)
+            if "resource_id" not in inventory.columns or "monthly_cost" not in inventory.columns:
+                return {}
+
+            return {
+                str(row["resource_id"]): float(row["monthly_cost"])
+                for _, row in inventory.iterrows()
+            }
+        except Exception:
+            return {}
 
     @staticmethod
     def _estimate_monthly_cost(resource_id: str) -> float:
@@ -655,11 +687,11 @@ class RiskAssessmentPipeline:
     def run(self) -> pd.DataFrame:
         """Execute the full risk assessment pipeline."""
         forecast_df = self.load_forecast_data()
+        forecast_df = self._include_inventory_resources(forecast_df)
         enriched = WasteScoreEngine.enrich_forecast_data(forecast_df)
 
-        metadata = self._metadata_generator.generate(
-            resource_ids=enriched["resource_id"].tolist()
-        )
+        resource_ids = enriched["resource_id"].tolist()
+        metadata = self._load_metadata(resource_ids)
 
         assessed = self._risk_assessor.assess(enriched, metadata)
         final = self._attach_explanations(assessed)
@@ -705,6 +737,68 @@ class RiskAssessmentPipeline:
         print()
 
         return final
+
+    def _load_metadata(self, resource_ids: list[str]) -> pd.DataFrame:
+        """Load AWS Scout metadata when available, otherwise generate synthetic metadata."""
+        try:
+            from agents.scout.resource_exporter import is_aws_scan_mode
+            from agents.scout.aws_metadata import AWSInfrastructureMetadataLoader
+
+            if is_aws_scan_mode():
+                logger.info("Loading AWS infrastructure metadata from Scout export.")
+                return AWSInfrastructureMetadataLoader().generate(resource_ids)
+        except FileNotFoundError as exc:
+            logger.error("AWS metadata load failed: %s", exc)
+            raise RiskDataError(str(exc)) from exc
+
+        return self._metadata_generator.generate(resource_ids=resource_ids)
+
+    def _include_inventory_resources(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
+        """Add EBS and other inventory resources missing from Prophet forecast output."""
+        try:
+            from agents.scout.resource_exporter import is_aws_scan_mode
+
+            if not is_aws_scan_mode():
+                return forecast_df
+        except Exception:
+            return forecast_df
+
+        inventory_path = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
+        if not inventory_path.exists():
+            return forecast_df
+
+        inventory = pd.read_csv(inventory_path)
+        missing = inventory[~inventory["resource_id"].isin(forecast_df["resource_id"])]
+        if missing.empty:
+            return forecast_df
+
+        stubs = []
+        for _, row in missing.iterrows():
+            avg_cpu = float(row.get("avg_cpu") or 0.0)
+            if avg_cpu < 5:
+                waste_probability = "high"
+                utilization_category = "idle"
+            elif avg_cpu < 20:
+                waste_probability = "medium"
+                utilization_category = "low_usage"
+            else:
+                waste_probability = "low"
+                utilization_category = "healthy"
+
+            stubs.append(
+                {
+                    "resource_id": row["resource_id"],
+                    "historical_avg_cpu": avg_cpu,
+                    "forecast_avg_cpu": avg_cpu,
+                    "forecast_min_cpu": avg_cpu,
+                    "forecast_max_cpu": avg_cpu,
+                    "utilization_category": utilization_category,
+                    "waste_probability": waste_probability,
+                }
+            )
+
+        logger.info("Added %d non-forecast inventory resource(s) for AWS scan.", len(stubs))
+        return pd.concat([forecast_df, pd.DataFrame(stubs)], ignore_index=True)
 
 
 def _configure_logging() -> None:

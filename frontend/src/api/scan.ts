@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/api/client";
 import { validateObjectResponse } from "@/api/validate";
-import type { ScanStartResponse, ScanStatusResponse } from "@/api/types";
+import type { ScanMode, ScanStartRequest, ScanStartResponse, ScanStatusResponse } from "@/api/types";
 
 /** Scan polling can outlast default API timeouts while the pipeline runs. */
 const scanClient = axios.create({
@@ -28,12 +28,29 @@ scanClient.interceptors.response.use(
   }
 );
 
-export async function startCloudScan(): Promise<ScanStartResponse> {
-  const { data } = await scanClient.post<ScanStartResponse>("/scan/start");
-  return validateObjectResponse<ScanStartResponse>(data, "scan start", ["scan_id", "status"]);
+export async function startCloudScan(mode: ScanMode = "synthetic"): Promise<ScanStartResponse> {
+  const payload: ScanStartRequest = { mode };
+  const { data } = await scanClient.post<ScanStartResponse>("/scan/start", payload);
+  return validateObjectResponse<ScanStartResponse>(data, "scan start", [
+    "scan_id",
+    "status",
+    "scan_mode",
+  ]);
 }
 
 export async function fetchScanStatus(): Promise<ScanStatusResponse> {
   const { data } = await scanClient.get<ScanStatusResponse>("/scan/status");
   return validateObjectResponse<ScanStatusResponse>(data, "scan status", ["status", "progress"]);
+}
+
+export interface ScanSourceResponse {
+  mode: "aws" | "synthetic" | "unknown";
+  region?: string;
+  resource_count?: number;
+  generated_at?: string;
+}
+
+export async function fetchScanSource(): Promise<ScanSourceResponse> {
+  const { data } = await scanClient.get<ScanSourceResponse>("/scan/source");
+  return validateObjectResponse<ScanSourceResponse>(data, "scan source", ["mode"]);
 }

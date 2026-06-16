@@ -1,0 +1,9 @@
+{
+  "mode": "aws",
+  "region": "ap-southeast-2",
+  "generated_at": "2026-06-16T18:20:29.023442+00:00",
+  "ec2_count": 1,
+  "ebs_count": 2,
+  "resource_count": 3,
+  "history_rows": 1
+}

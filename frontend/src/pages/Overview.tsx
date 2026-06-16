@@ -6,9 +6,11 @@ import {
 import { AlertTriangle, Cloud, DollarSign, TrendingDown } from "lucide-react";
 import { LiveScanButton } from "@/components/overview/LiveScanButton";
 import { ChartLegend, ChartPanel, KpiCard } from "@/components/dashboard/OverviewWidgets";
+import { DataModeNotice } from "@/components/shared/DataModeNotice";
 import { PageHeader, StatusDot } from "@/components/shared/PageHeader";
 import { QueryState } from "@/components/shared/QueryState";
 import { useOverview } from "@/hooks/useApiQueries";
+import { useDataScanMode } from "@/hooks/useDataScanMode";
 import { SkeletonKpiGrid } from "@/components/shared/Skeletons";
 import { buildOverviewMetrics } from "@/lib/transforms";
 import { formatCurrency } from "@/lib/utils";
@@ -75,6 +77,7 @@ function DarkTooltip({
 
 export default function OverviewPage() {
   const { data, isLoading, isError, error, refetch } = useOverview();
+  const scanMode = useDataScanMode();
 
   const metrics = useMemo(
     () => (data ? buildOverviewMetrics(data) : null),
@@ -91,6 +94,8 @@ export default function OverviewPage() {
       >
         <LiveScanButton />
       </PageHeader>
+
+      <DataModeNotice scanMode={scanMode} />
 
       <QueryState
         isLoading={isLoading}
@@ -142,7 +147,7 @@ export default function OverviewPage() {
             <div className="grid gap-4 xl:grid-cols-12">
               <ChartPanel
                 title="Waste Trend"
-                subtitle="Derived savings trajectory from audit results"
+                subtitle="Estimated projection from current audit totals — not historical time-series data"
                 className="xl:col-span-8"
               >
                 <ResponsiveContainer width="100%" height={300}>
@@ -192,9 +197,9 @@ export default function OverviewPage() {
                 </ResponsiveContainer>
                 <ChartLegend
                   items={[
-                    { label: "Identified Waste", color: THEME.red },
-                    { label: "Recovered Savings", color: THEME.green },
-                    { label: "Baseline", color: THEME.axis },
+                    { label: "Identified Waste (estimated)", color: THEME.red },
+                    { label: "Recovered Savings (estimated)", color: THEME.green },
+                    { label: "Baseline (estimated)", color: THEME.axis },
                   ]}
                 />
               </ChartPanel>

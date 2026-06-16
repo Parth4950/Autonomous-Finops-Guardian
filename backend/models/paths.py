@@ -18,4 +18,3 @@ EXECUTION_HISTORY_CSV = PROJECT_ROOT / "agents" / "executor" / "results" / "exec
 ROLLBACK_PLANS_JSON = PROJECT_ROOT / "agents" / "executor" / "results" / "rollback_plans.json"
 EXECUTION_LOGS_DIR = PROJECT_ROOT / "agents" / "executor" / "logs"
 FORECAST_DASHBOARD_JSON = PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_dashboard.json"
-FORECAST_DASHBOARD_FALLBACK = PROJECT_ROOT / "frontend" / "src" / "data" / "forecast-predictions.json"

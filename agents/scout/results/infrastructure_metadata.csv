@@ -1,0 +1,4 @@
+resource_id,environment,business_critical,attached_to_load_balancer,member_of_autoscaling_group,owner_exists,recent_activity_days
+i-0a1913f217d016234,development,False,False,False,False,11
+vol-0daed781993e2129c,development,False,False,False,False,30
+vol-05af6bdd35accd003,development,False,False,False,False,999

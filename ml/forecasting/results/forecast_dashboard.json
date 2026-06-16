@@ -1,0 +1,236 @@
+{
+  "meta": {
+    "history_days": 90,
+    "forecast_days": 30,
+    "generated_from": "ml\\forecasting\\results\\forecast_results.csv"
+  },
+  "stats": {
+    "total": 1,
+    "waste_high": 1,
+    "waste_medium": 0,
+    "waste_low": 0,
+    "idle": 1,
+    "low_usage": 0,
+    "healthy": 0,
+    "high_usage": 0
+  },
+  "waste_distribution": [
+    {
+      "category": "high",
+      "count": 1
+    },
+    {
+      "category": "medium",
+      "count": 0
+    },
+    {
+      "category": "low",
+      "count": 0
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "i-0a1913f217d016234",
+      "resource_type": "unknown",
+      "historical_avg_cpu": 0.48,
+      "forecast_avg_cpu": 0.48,
+      "forecast_min_cpu": 0.48,
+      "forecast_max_cpu": 0.48,
+      "utilization_category": "idle",
+      "waste_probability": "high"
+    }
+  ],
+  "chart_data": {
+    "i-0a1913f217d016234": {
+      "forecast_start": "2026-06-05",
+      "historical": [
+        {
+          "date": "2026-06-05",
+          "cpu": 0.48
+        }
+      ],
+      "forecast": [
+        {
+          "date": "2026-06-06",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-07",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-08",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-09",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-10",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-11",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-12",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-13",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-14",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-15",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-16",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-17",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-18",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-19",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-20",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-21",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-22",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-23",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-24",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-25",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-26",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-27",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-28",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-29",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-06-30",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-07-01",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-07-02",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-07-03",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-07-04",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        },
+        {
+          "date": "2026-07-05",
+          "cpu": 0.48,
+          "lower": 0.0,
+          "upper": 5.48
+        }
+      ]
+    }
+  }
+}

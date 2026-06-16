@@ -7,9 +7,11 @@ Isolation Forest anomaly detection without live AWS dependencies.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 SYNTHETIC_DATA_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_CSV = SYNTHETIC_DATA_DIR / "cloud_resources.csv"
 DEFAULT_FIGURES_DIR = SYNTHETIC_DATA_DIR / "figures"
+DEFAULT_SCAN_SOURCE_JSON = SYNTHETIC_DATA_DIR / "scan_source.json"
 
 RANDOM_SEED = 42
 
@@ -371,6 +374,17 @@ class SyntheticDatasetPipeline:
         """
         dataframe = self._generator.generate_dataset()
         csv_path = self._exporter.save_csv(dataframe)
+        DEFAULT_SCAN_SOURCE_JSON.write_text(
+            json.dumps(
+                {
+                    "mode": "synthetic",
+                    "generated_at": datetime.now(UTC).isoformat(),
+                    "resource_count": len(dataframe),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         DatasetStatistics.print_summary(dataframe)
         figure_paths = self._visualizer.generate_all(dataframe)
 

@@ -235,10 +235,17 @@ export interface ExecutionTriggerResponse {
   message: string;
 }
 
+export type ScanMode = "synthetic" | "aws";
+
+export interface ScanStartRequest {
+  mode?: ScanMode;
+}
+
 export interface ScanStartResponse {
   scan_id: string;
   status: string;
   message: string;
+  scan_mode: ScanMode;
 }
 
 export interface ScanStepProgress {
@@ -250,6 +257,7 @@ export interface ScanStatusResponse {
   scan_id?: string | null;
   status: string;
   progress: number;
+  scan_mode?: ScanMode | null;
   current_step?: string | null;
   steps?: ScanStepProgress[];
   message?: string | null;

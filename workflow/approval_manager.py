@@ -198,6 +198,37 @@ class ApprovalManager:
         )
         return created
 
+    def supersede_stale_pending(
+        self,
+        active_resource_ids: set[str],
+        *,
+        reviewer: str = "scan-orchestrator",
+    ) -> int:
+        """
+        Reject pending approvals for resources outside the latest scan inventory.
+
+        Keeps the approval queue aligned with the most recent cloud scan output.
+        """
+        superseded = 0
+        for record in self.list_pending_approvals():
+            if record.resource_id in active_resource_ids:
+                continue
+            try:
+                self.reject_request(
+                    record.approval_id,
+                    reviewer=reviewer,
+                    notes="Superseded — resource not in latest scan inventory.",
+                )
+                superseded += 1
+            except InvalidApprovalTransitionError:
+                logger.debug(
+                    "Skipped superseding approval %s — invalid transition",
+                    record.approval_id,
+                )
+        if superseded:
+            logger.info("Superseded %d stale pending approval(s)", superseded)
+        return superseded
+
     def list_pending_approvals(self) -> list[ApprovalRecord]:
         """Return all pending approval requests."""
         return [

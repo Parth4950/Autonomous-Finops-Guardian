@@ -14,13 +14,16 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from ml.forecasting.prophet_forecaster import (  # noqa: E402
     DEFAULT_FORECAST_RESULTS_PATH,
+    DEFAULT_FORECAST_SERIES_CACHE_PATH,
     DEFAULT_HISTORICAL_PATH,
     FORECAST_DAYS,
     HISTORY_DAYS,
     ProphetForecaster,
+    build_resource_chart_series,
+    load_forecast_series_cache,
 )
 
-OUTPUT_PATH = _PROJECT_ROOT / "frontend" / "src" / "data" / "forecast-predictions.json"
+OUTPUT_PATH = _PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_dashboard.json"
 
 
 def resource_type(resource_id: str) -> str:
@@ -33,36 +36,32 @@ def resource_type(resource_id: str) -> str:
     return "unknown"
 
 
-def build_series(
-    historical: pd.DataFrame,
-    forecaster: ProphetForecaster,
-    resource_id: str,
-) -> dict:
-    history = historical[historical["resource_id"] == resource_id].sort_values("date")
-    forecast = forecaster.get_forecast_detail(resource_id).copy()
-    forecast["ds"] = pd.to_datetime(forecast["ds"])
-    forecast_tail = forecast.tail(FORECAST_DAYS)
-    last_history_date = pd.to_datetime(history["date"].max())
+def load_chart_data(historical: pd.DataFrame, resource_ids: list[str]) -> dict[str, dict]:
+    """Load cached chart series or rebuild as a fallback for legacy pipeline runs."""
+    chart_data: dict[str, dict] = {}
 
-    return {
-        "forecast_start": last_history_date.date().isoformat(),
-        "historical": [
-            {
-                "date": pd.to_datetime(row["date"]).date().isoformat(),
-                "cpu": round(float(row["cpu_utilization"]), 2),
-            }
-            for _, row in history.iterrows()
-        ],
-        "forecast": [
-            {
-                "date": row["ds"].date().isoformat(),
-                "cpu": round(float(row["yhat"]), 2),
-                "lower": round(float(max(0, row["yhat_lower"])), 2),
-                "upper": round(float(min(100, row["yhat_upper"])), 2),
-            }
-            for _, row in forecast_tail.iterrows()
-        ],
-    }
+    try:
+        chart_data = load_forecast_series_cache(DEFAULT_FORECAST_SERIES_CACHE_PATH)
+        missing = [resource_id for resource_id in resource_ids if resource_id not in chart_data]
+        if not missing:
+            print(f"Loaded forecast chart cache for {len(chart_data)} resources.")
+            return chart_data
+        print(f"Forecast cache missing {len(missing)} resource(s); rebuilding only those entries.")
+    except (FileNotFoundError, ValueError, json.JSONDecodeError):
+        print("Forecast series cache unavailable; rebuilding chart data with Prophet.")
+        missing = resource_ids
+
+    forecaster = ProphetForecaster()
+    for resource_id in missing:
+        resource_frame = historical[historical["resource_id"] == resource_id]
+        forecaster.forecast_resource(resource_id, resource_frame)
+        chart_data[resource_id] = build_resource_chart_series(
+            historical,
+            forecaster.get_forecast_detail(resource_id),
+            resource_id,
+        )
+
+    return chart_data
 
 
 def main() -> int:
@@ -75,13 +74,9 @@ def main() -> int:
 
     historical = pd.read_csv(historical_path, parse_dates=["date"])
     results = pd.read_csv(results_path)
+    resource_ids = results["resource_id"].tolist()
 
-    forecaster = ProphetForecaster()
-    forecaster.forecast_all(historical)
-
-    utilization_counts = (
-        results["utilization_category"].value_counts().to_dict()
-    )
+    utilization_counts = results["utilization_category"].value_counts().to_dict()
     waste_counts = results["waste_probability"].value_counts().reindex(
         ["high", "medium", "low"], fill_value=0
     )
@@ -102,10 +97,7 @@ def main() -> int:
             }
         )
 
-    chart_data = {
-        rid: build_series(historical, forecaster, rid)
-        for rid in results["resource_id"].tolist()
-    }
+    chart_data = load_chart_data(historical, resource_ids)
 
     payload = {
         "meta": {

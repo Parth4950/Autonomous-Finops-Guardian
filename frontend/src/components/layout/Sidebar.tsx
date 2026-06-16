@@ -2,16 +2,19 @@ import {
   Activity,
   AlertTriangle,
   BarChart3,
+  Beaker,
   CheckSquare,
   Cloud,
   History,
   LayoutDashboard,
   LineChart,
-  Play,
   Shield,
+  ShieldCheck,
   TrendingDown,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useHealth, useScanSource } from "@/hooks/useApiQueries";
+import { useDataScanMode } from "@/hooks/useDataScanMode";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -31,6 +34,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed = false }: SidebarProps) {
+  const { isError, data } = useHealth();
+  const { data: scanSource } = useScanSource();
+  const scanMode = useDataScanMode();
+  const apiOnline = !isError && data?.status === "healthy";
+  const isAws = scanMode === "aws";
+
   return (
     <aside
       className={cn(
@@ -72,12 +81,31 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
       </nav>
 
       {!collapsed && (
-        <div className="border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-2 rounded-md bg-sidebar-accent px-3 py-2">
-            <Play className="h-3.5 w-3.5 text-emerald-400" />
+        <div className="space-y-2 border-t border-sidebar-border p-4">
+          <div className="flex items-start gap-2 rounded-md bg-sidebar-accent px-3 py-2.5">
+            {isAws ? (
+              <Cloud className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-400" />
+            ) : (
+              <Beaker className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
+            )}
             <div>
-              <p className="text-xs font-medium text-sidebar-foreground">Pipeline Active</p>
-              <p className="text-[10px] text-muted-foreground">Simulation mode</p>
+              <p className="text-xs font-medium text-sidebar-foreground">
+                {isAws ? "Live AWS data" : "Synthetic data"}
+              </p>
+              <p className="text-[10px] leading-relaxed text-muted-foreground">
+                {isAws
+                  ? `${scanSource?.resource_count ?? 0} resource(s) from Scout in ${scanSource?.region ?? "AWS"}`
+                  : "Local pipeline outputs — not live AWS discovery"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 rounded-md bg-sidebar-accent px-3 py-2.5">
+            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+            <div>
+              <p className="text-xs font-medium text-sidebar-foreground">Simulation mode</p>
+              <p className="text-[10px] leading-relaxed text-muted-foreground">
+                {apiOnline ? "API connected · safe execution only" : "API offline"}
+              </p>
             </div>
           </div>
         </div>
