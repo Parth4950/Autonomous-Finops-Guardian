@@ -106,7 +106,14 @@ class ScanService:
             return self._state
 
     def _validate_aws_configuration(self) -> None:
+        from backend.config import aws_scan_enabled
         from backend.utils.aws_client import AWSConfigurationError, get_aws_credentials
+
+        if not aws_scan_enabled():
+            raise ScanConfigurationError(
+                "Live AWS scan is disabled on this deployment. "
+                "Use synthetic mode for hosted demos, or run locally with AWS credentials."
+            )
 
         try:
             get_aws_credentials()

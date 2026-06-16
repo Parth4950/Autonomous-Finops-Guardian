@@ -1,0 +1,24 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Deploy: connect this repo on Render → New → Blueprint → select render.yaml
+services:
+  - type: web
+    name: finops-api
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: EXECUTION_MODE
+        value: simulation
+      - key: ALLOW_AWS_SCAN
+        value: "false"
+      - key: MPLBACKEND
+        value: Agg
+      - key: CORS_ALLOW_ORIGINS
+        sync: false
+      # Optional — Gemini explanations on hosted demo (set in Render dashboard)
+      - key: GEMINI_API_KEY
+        sync: false

@@ -21,6 +21,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from backend.api import anomalies, approvals, audit, execution, forecast, health, planner, resources, risk, scan, waste
+from backend.config import cors_allow_origins
 from backend.services.data_loader import DataNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -54,8 +55,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_allow_origins(),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

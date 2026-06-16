@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -13,6 +13,9 @@ class HealthResponse(BaseModel):
     """Health check response."""
 
     status: str = Field(default="healthy", examples=["healthy"])
+    deployment: Literal["local", "hosted"] = "local"
+    aws_scan_enabled: bool = True
+    execution_mode: str = "simulation"
 
 
 class MessageResponse(BaseModel):

@@ -266,6 +266,10 @@ Both modes run the full FinOps pipeline in the background:
 
 **Safety:** Remediation execution remains in simulation mode by default (`EXECUTION_MODE=simulation`). Live AWS discovery does not terminate or modify infrastructure.
 
+### Hosted demo (Vercel + Render)
+
+Deploy the React UI on **Vercel** and the API on **Render** for a portfolio URL. See **[docs/DEPLOY.md](docs/DEPLOY.md)** for step-by-step setup, environment variables, and CORS configuration. Hosted deployments should use **synthetic scans only** — do not put personal AWS keys on Render.
+
 ```bash
 # API
 curl -X POST http://127.0.0.1:8000/scan/start -H "Content-Type: application/json" -d "{\"mode\":\"aws\"}"
