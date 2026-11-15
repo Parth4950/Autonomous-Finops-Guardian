@@ -197,9 +197,13 @@ class WasteScoreEngine:
         if cost_map:
             enriched["monthly_cost"] = enriched["resource_id"].map(cost_map)
             missing_cost = enriched["monthly_cost"].isna()
-            enriched.loc[missing_cost, "monthly_cost"] = enriched.loc[
-                missing_cost, "resource_id"
-            ].apply(cls._estimate_monthly_cost)
+            if missing_cost.any():
+                estimated_costs = enriched.loc[missing_cost, "resource_id"].apply(
+                    lambda resource_id: cls._estimate_monthly_cost(resource_id)
+                )
+                enriched.loc[missing_cost, "monthly_cost"] = pd.to_numeric(
+                    estimated_costs, errors="coerce"
+                ).astype("float64")
         else:
             enriched["monthly_cost"] = enriched["resource_id"].apply(
                 cls._estimate_monthly_cost
