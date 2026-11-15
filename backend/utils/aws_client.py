@@ -39,6 +39,7 @@ class AWSCredentials:
     access_key_id: str
     secret_access_key: str
     region: str
+    session_token: str | None = None
 
 
 class AWSConfigurationError(ValueError):
@@ -51,18 +52,15 @@ class AWSClientError(RuntimeError):
 
 def load_aws_environment() -> None:
     """
-    Load AWS variables from the project-root .env file.
+    Load AWS variables from the project-root .env file when it is present.
 
-    Raises:
-        FileNotFoundError: If the .env file does not exist.
+    When the file is absent, credentials injected into the process environment
+    (for example, by Kubernetes Secrets) remain available for validation.
     """
-    if not _ENV_FILE.exists():
-        raise FileNotFoundError(
-            f".env file not found at {_ENV_FILE}. "
-            "Copy .env.example to .env and fill in your AWS credentials."
-        )
-
-    load_dotenv(_ENV_FILE, override=True)
+    if _ENV_FILE.is_file():
+        # Preserve Compose behavior: the project-root .env overrides blank
+        # interpolation values passed through the container environment.
+        load_dotenv(_ENV_FILE, override=True)
 
 
 def get_aws_credentials(region: str | None = None) -> AWSCredentials:
@@ -101,6 +99,7 @@ def get_aws_credentials(region: str | None = None) -> AWSCredentials:
         access_key_id=os.environ["AWS_ACCESS_KEY_ID"].strip(),
         secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"].strip(),
         region=resolved_region,
+        session_token=os.getenv("AWS_SESSION_TOKEN", "").strip() or None,
     )
 
 
@@ -141,12 +140,14 @@ class AWSClientHelper:
             AWSClientError: If credentials are invalid or client creation fails.
         """
         try:
-            client = boto3.client(
-                service_name,
-                aws_access_key_id=self._credentials.access_key_id,
-                aws_secret_access_key=self._credentials.secret_access_key,
-                region_name=self._credentials.region,
-            )
+            client_options = {
+                "aws_access_key_id": self._credentials.access_key_id,
+                "aws_secret_access_key": self._credentials.secret_access_key,
+                "region_name": self._credentials.region,
+            }
+            if self._credentials.session_token:
+                client_options["aws_session_token"] = self._credentials.session_token
+            client = boto3.client(service_name, **client_options)
             logger.debug("Created Boto3 client for service: %s", service_name)
             return client
 
