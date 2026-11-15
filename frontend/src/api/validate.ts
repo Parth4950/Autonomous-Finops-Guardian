@@ -44,6 +44,23 @@ export function validateObjectResponse<T extends object>(
   return payload as unknown as T;
 }
 
-export function validateHealthResponse(data: unknown): { status: string } {
-  return validateObjectResponse(data, "health", ["status"]);
+export function validateHealthResponse(data: unknown): {
+  status: string;
+  deployment?: "local" | "hosted";
+  aws_scan_enabled?: boolean;
+  execution_mode?: string;
+} {
+  const payload = validateObjectResponse<{ status: string }>(data, "health", ["status"]);
+  const record = data as Record<string, unknown>;
+  return {
+    status: payload.status,
+    deployment:
+      record.deployment === "hosted" || record.deployment === "local"
+        ? record.deployment
+        : undefined,
+    aws_scan_enabled:
+      typeof record.aws_scan_enabled === "boolean" ? record.aws_scan_enabled : undefined,
+    execution_mode:
+      typeof record.execution_mode === "string" ? record.execution_mode : undefined,
+  };
 }

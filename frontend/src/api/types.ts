@@ -7,6 +7,9 @@ export interface PaginatedResponse<T> {
 
 export interface HealthResponse {
   status: string;
+  deployment?: "local" | "hosted";
+  aws_scan_enabled?: boolean;
+  execution_mode?: string;
 }
 
 export interface ResourceItem {
