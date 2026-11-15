@@ -149,6 +149,11 @@ class ScanService:
                 try:
                     self._run_in_process_step(step_name, self._project_root)
                 except Exception as exc:
+                    logger.exception(
+                        "Cloud scan %s failed during in-process step: %s",
+                        scan_id[:8],
+                        step_name,
+                    )
                     self._fail_scan(scan_id, f"{step_name} failed: {exc}")
                     return
             else:
@@ -169,11 +174,23 @@ class ScanService:
                         env=env,
                     )
                 except OSError as exc:
+                    logger.exception(
+                        "Cloud scan %s could not start step: %s",
+                        scan_id[:8],
+                        step_name,
+                    )
                     self._fail_scan(scan_id, f"{step_name} failed: {exc}")
                     return
 
                 if result.returncode != 0:
                     detail = (result.stderr or result.stdout or "Unknown error").strip()
+                    logger.error(
+                        "Cloud scan %s subprocess step %s failed (exit %d); captured traceback/output:\n%s",
+                        scan_id[:8],
+                        step_name,
+                        result.returncode,
+                        detail,
+                    )
                     tail = detail.splitlines()[-1] if detail else "Process exited with error"
                     self._fail_scan(scan_id, f"{step_name} failed: {tail}")
                     return
