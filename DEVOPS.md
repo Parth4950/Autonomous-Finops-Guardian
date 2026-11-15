@@ -1,45 +1,47 @@
 # Autonomous FinOps Guardian — DevOps Guide
 
-This repository adds build, validation, security, local orchestration, monitoring, and optional Kubernetes configurations around the existing React/Vite and FastAPI application. The application UI, routes, API response formats, FinOps calculations, ML/AI agents, and approval/remediation behavior were left unchanged.
+This guide describes the DevOps configuration present in this repository. It covers local Docker Compose, optional Docker Desktop Kubernetes, GitHub Actions, Trivy, Prometheus/Grafana, and the AWS read-only discovery integration. The React/Vite UI, FastAPI endpoints, FinOps calculations, ML/AI agents, and approval workflow remain application-owned behavior.
 
-## Architecture and status
+## Architecture and implementation status
 
 ```mermaid
 flowchart LR
-    GH[GitHub repository] --> GA[GitHub Actions: push and PR checks]
-    GH --> J[Jenkins multibranch / webhook]
-    J --> T[Tests and frontend checks]
-    T --> D[Build backend and frontend images]
-    D --> S[Trivy image and filesystem scans]
-    S --> G{Manual deployment gate}
-    G -->|Configured and approved| P[Render backend / Vercel frontend]
-    G -->|Disabled by default| Skip[No deployment]
-    P --> M[Prometheus, Grafana, availability probes]
-    GA -. independent CI; does not trigger Jenkins by default .-> T
+    GH[GitHub] --> GA[GitHub Actions: CI and security]
+    GA --> TEST[Backend, frontend, config and Docker build checks]
+    GA --> TRIVY[Trivy filesystem, dependency, misconfiguration and secret checks]
+    TEST --> REVIEW[Reviewed code and build artifacts]
+    REVIEW --> HOST[Optional existing Render and Vercel hosting]
+    DEV[Local developer] --> COMPOSE[Docker Compose: backend and frontend]
+    COMPOSE --> MON[Optional Prometheus, Grafana and Blackbox]
+    DEV --> K8S[Optional Docker Desktop Kubernetes]
+    K8S --> APP[Backend and frontend Deployments]
+    J[Jenkins execution: skipped] -. not configured .-> GH
 ```
 
-GitHub Actions and Jenkins each watch GitHub independently. Configure a GitHub webhook or Multibranch Pipeline scan to trigger Jenkins; the GitHub Actions workflow does not dispatch Jenkins automatically. Render and Vercel remain the intended hosted services. Docker Compose and Kubernetes are local/self-managed options, not claims of a cloud deployment.
+GitHub Actions validates changes; it does not publish images, deploy to production, enable AWS scans, or run remediation. Render remains the configured backend hosting target and Vercel the frontend target; deployments require the existing provider integration and are not performed by these workflows. Kubernetes is an optional local deployment. Jenkins was skipped: although a `Jenkinsfile` exists in the repository, no Jenkins server/agent was configured or used for this implementation.
 
-| Feature | Status |
+| Component | Repository configuration and status |
 |---|---|
-| Backend and frontend Dockerfiles, Nginx API proxy and Compose | Implemented; verify using the commands below |
-| GitHub Actions CI and dependency/repository security workflow | Implemented; runs when pushed to GitHub |
-| Jenkins declarative pipeline | Implemented; requires a Jenkins agent with Python, Node, Docker and Trivy |
-| Credential-free backend health test | Implemented; existing credentialed AWS/Gemini scripts are excluded from CI |
-| Kubernetes manifests | Implemented for a local cluster; no cluster deployment is implied |
-| Prometheus, Grafana and Blackbox availability monitoring | Windows-compatible Compose `monitoring` profile |
-| cAdvisor Docker container metrics | Opt-in `docker-metrics` profile; reads Docker Desktop Linux VM container/cgroup data through the daemon socket |
-| Node Exporter | Linux-host-only `linux-host` profile; not enabled or scraped in the Windows default profile |
-| Render/Vercel production rollout | Existing hosting architecture retained; deployment requires configured provider integration and explicit approval |
+| Backend container | Python 3.11 image, Uvicorn, health check, UID/GID 10001 |
+| Frontend container | Node 22 build stage, Nginx unprivileged runtime, port 8080, SPA fallback and `/api` proxy |
+| Compose | Backend, frontend and optional monitoring profiles; application defaults to simulation |
+| Kubernetes | Namespace, ConfigMap, optional Secret reference, Services, Deployments and optional Ingress manifests |
+| Kubernetes hardening | Pod/container non-root identities, read-only root filesystems, dropped capabilities, no privilege escalation, RuntimeDefault seccomp and scoped writable volumes |
+| GitHub Actions | CI and security workflows on pushes to `main` and pull requests targeting `main`; security also supports weekly and manual runs |
+| Trivy | Repository filesystem scan for vulnerabilities, misconfiguration and secrets at HIGH/CRITICAL severity; failures are not suppressed |
+| Monitoring | Prometheus, Grafana and Blackbox in the Windows-compatible `monitoring` Compose profile; cAdvisor and Node Exporter are optional profiles |
+| Jenkins | Skipped; no Jenkins run or deployment is claimed |
+
+The Kubernetes hardening manifests passed YAML validation and the Trivy scan. The hardened backend and frontend Deployments were successfully rolled out: both Pods reached `1/1 Running` with zero restarts, and application access was tested successfully. CI also passed backend tests, frontend lint/build, configuration checks, and both Docker image builds for the hardening commit.
 
 ## Docker and Docker Compose
 
-Install Docker Desktop on Windows (or Docker Engine plus Compose v2 on Linux). From the repository root in PowerShell:
+Install Docker Desktop (Linux containers) or Docker Engine with Compose v2. From the repository root in PowerShell:
 
 ```powershell
 docker --version
 docker compose version
-docker compose config
+docker compose config --quiet
 docker compose up --build -d
 docker compose ps
 Invoke-RestMethod http://localhost:8000/health
@@ -47,36 +49,52 @@ Invoke-WebRequest http://localhost:8080/ -UseBasicParsing
 Invoke-WebRequest http://localhost:8080/api/health -UseBasicParsing
 ```
 
-The backend listens on host port 8000 and the Nginx frontend on 8080 by default. Override with `BACKEND_PORT` and `FRONTEND_PORT`. The frontend serves the Vite build, falls back to `index.html` for client-side routes, and proxies `/api/*` to FastAPI. The backend image is Python 3.11 and runs as UID/GID 10001. The frontend uses a Node 22 build stage and an unprivileged Nginx image. No private Vite variables are passed at build time; `VITE_API_BASE_URL=/api` is a public path.
+The backend is exposed on host port 8000 and the frontend on 8080 by default. `BACKEND_PORT` and `FRONTEND_PORT` can override these ports. Nginx serves the Vite build, falls back to `index.html` for client-side routes, and proxies `/api/` to the backend service. The frontend build receives only the public API path (`VITE_API_BASE_URL=/api`); AWS credentials are never sent to the frontend.
 
-Configuration defaults to `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`. For Compose interpolation, create a local root `.env` from `.env.example` and set only non-production values you need. Learner Lab uses `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_REGION`; regular access keys can omit the session token. Compose passes AWS environment variables only to the backend and mounts the project-root `.env` read-only. Keep actual credentials in ignored local `.env`, never in source, image layers, workflow variables, or logs. AWS scans remain disabled until `ALLOW_AWS_SCAN` is explicitly enabled. Gemini is optional. No production credentials are needed to build or run the local app.
+Compose defaults are `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`. The backend receives AWS variables through Compose and mounts the project-root `.env` at `/app/.env` read-only. `backend/utils/aws_client.py` loads this project-root file and also accepts environment-injected values, including Kubernetes Secret variables. Learner Lab uses `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`, and `AWS_REGION`; regular access keys work without a session token. Keep actual values in a local ignored `.env` or a secret store. `.env.example` contains names/placeholders only. Credentials must not be committed, baked into images, passed to Vite, or printed in logs.
+
+If `.env` does not exist, create it without overwriting an existing credentials file:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Start, inspect, and stop the application with:
 
 ```powershell
 docker compose logs --tail 100 backend frontend
 docker compose down
 ```
 
-Compose named volumes retain Prometheus and Grafana data. `docker compose down -v` deletes those monitoring volumes.
+`docker compose down -v` also deletes named monitoring data volumes; use it only when that data can be discarded.
 
-## Jenkins setup and pipeline
+## GitHub Actions and security checks
 
-Install a supported Jenkins LTS and Docker on a Linux agent. Install Pipeline, Git, Credentials Binding and JUnit plugins. The agent needs Python 3.11, Node/npm 22, Docker CLI with daemon access, and Trivy on `PATH`. Configure a Multibranch Pipeline pointed at this GitHub repository and use the root `Jenkinsfile`; configure a GitHub webhook or periodic branch scan for triggers. Do not grant production credentials to general PR jobs.
+`.github/workflows/ci.yml` runs on pushes to `main` and pull requests targeting `main`. It uses GitHub-hosted runners and read-only repository permissions. It installs Python dependencies, runs `python -m unittest discover -s tests -v`, runs the existing frontend `npm ci`, lint and production build, validates YAML/JSON and Docker Compose configuration, and builds both Docker images without publishing them. CI sets `EXECUTION_MODE=simulation`, disables live scans, and disables EC2 metadata access for backend tests.
 
-The declarative stages check tools and safety defaults, install existing dependencies, run `python -m unittest discover -s tests -v`, run the existing `npm run lint` and `npm run build`, build and inspect both images, and fail on Trivy HIGH/CRITICAL findings. Builds have a 60-minute timeout and Docker images are removed after the job. Frontend build artifacts are archived. The repository's top-level `test_aws.py`, `test_gemini.py`, and `test_gemini_models.py` are manual credentialed integration scripts, not unit tests; the pipeline does not call AWS or Gemini.
+`.github/workflows/security.yml` runs on pushes to `main`, pull requests targeting `main`, a weekly schedule, and manual dispatch. It runs `pip-audit`, `npm audit --audit-level=high`, and the official `aquasecurity/trivy-action@v0.36.0`. Trivy scans the repository filesystem with vulnerability, misconfiguration, and secret scanners at `HIGH,CRITICAL`; `exit-code: 1` makes findings fail the job. The workflow does not scan/publish built images or deploy them. The security workflow and CI passed on the hardening commit; this result does not replace runtime verification of a Kubernetes rollout. Moderate dependency advisories may be reported below the npm audit threshold; findings are not suppressed.
 
-Deployment is skipped unless all of these are configured: pipeline parameter `ENABLE_DEPLOYMENT=true`, a non-empty `DEPLOY_TARGET`, and Jenkins job environment variable `DEPLOY_COMMAND`. Jenkins then pauses at a manual `input` gate. If needed, configure `DEPLOY_CREDENTIALS_ID` as a Jenkins Secret Text credential; it is exposed only as `DEPLOY_TOKEN` inside the deployment step and shell tracing is disabled. The configured command must perform deployment and a post-deployment health check. Leave the parameter off for ordinary builds. No provider token or deployment target is invented by this repository.
+Local checks, if Trivy is installed:
 
-## GitHub Actions
+```powershell
+trivy fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL .
+python -m pip install pip-audit
+pip-audit -r requirements.txt
+Push-Location frontend
+npm ci
+npm audit --audit-level=high
+npm run lint
+npm run build
+Pop-Location
+```
 
-`.github/workflows/ci.yml` runs on pushes to `main` and pull requests targeting `main`, with read-only repository permissions. It caches pip/npm, runs backend unittest discovery, the existing ESLint and Vite build scripts, Docker builds without publishing images, YAML/JSON syntax validation, and Docker Compose model validation (including the optional cAdvisor overlay). `.github/workflows/security.yml` audits Python dependencies with `pip-audit`, npm dependencies with `npm audit`, and scans the repository with Trivy for vulnerabilities, misconfiguration, and secrets at HIGH/CRITICAL severity. It also runs weekly and by manual dispatch. Neither workflow needs production secrets or executes live scans/remediation.
+For optional local image scanning, build the images as described below and run `trivy image --severity HIGH,CRITICAL <image-name>`. This is separate from the GitHub workflow’s filesystem scan.
 
-## Kubernetes (optional local deployment)
+## Kubernetes on Docker Desktop
 
-Kubernetes is optional. These manifests target a local Docker Desktop Kubernetes cluster. They keep simulation mode enabled and live AWS scanning disabled. AWS credentials are not required for a synthetic scan. Do not enable live scanning as part of this setup.
+Kubernetes is optional; normal Compose operation does not require it. The manifests use local image names `autonomous-finops-backend:local` and `autonomous-finops-frontend:local` with `imagePullPolicy: IfNotPresent`.
 
-### Build the images
-
-In PowerShell from the repository root, using Docker Desktop's Linux engine:
+Build the images using Docker Desktop’s Linux engine:
 
 ```powershell
 docker context use desktop-linux
@@ -86,126 +104,83 @@ docker image inspect autonomous-finops-backend:local
 docker image inspect autonomous-finops-frontend:local
 ```
 
-The Kubernetes Deployments reference those exact names with `imagePullPolicy: IfNotPresent`. Docker Desktop Kubernetes supports its local image store; choose a provisioning mode compatible with the Docker Desktop image store in use. Do not retag or publish images unless using a separate cluster/registry.
+The `finops-config` ConfigMap sets `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`. Leave these defaults in place for the initial deployment. The backend optionally references `finops-secrets`; the frontend has no Secret reference. No AWS credentials are required for simulation mode. Never put real values in committed Kubernetes YAML. If a later, deliberate read-only AWS discovery is approved, create the Secret locally from an ignored file and keep it out of Git; do not enable remediation or put AWS variables in the frontend.
 
-### Prepare a local Kubernetes Secret
-
-The backend accepts AWS credentials from environment variables when `/app/.env` is absent, as it is in Kubernetes. The Secret is only referenced by the backend Deployment; the frontend has no Secret reference. For optional, read-only AWS discovery at a later, deliberate time, make a local credentials file containing only the required keys:
-
-```powershell
-kubectl apply -f k8s/namespace.yaml
-Copy-Item k8s/secret.env.example k8s/secret.env
-notepad k8s/secret.env
-```
-
-Enter values locally for `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and (for Learner Lab temporary credentials) `AWS_SESSION_TOKEN`. `AWS_REGION` is supplied by the ConfigMap. The file `k8s/secret.env` is ignored by Git. Create/update the cluster Secret without displaying its data:
-
-```powershell
-kubectl create secret generic finops-secrets --namespace finops --from-env-file=k8s/secret.env --dry-run=client -o yaml | kubectl apply -f -
-```
-
-For synthetic-only use, skip Secret creation; the Deployment marks the Secret reference optional. Kubernetes Secret values are not a substitute for an external secret manager or encrypted-at-rest cluster storage. Do not run `kubectl get secret -o yaml` or commit generated Secret YAML.
-
-### Validate, apply and access
-
-First verify Docker Desktop Kubernetes is already enabled and the selected context is correct. These commands inspect state only:
+Validate the selected cluster and manifests before applying:
 
 ```powershell
 kubectl config current-context
 kubectl get nodes
-```
-
-Validate manifests locally without applying them:
-
-```powershell
 kubectl apply --dry-run=client -f k8s/namespace.yaml
 kubectl apply --dry-run=client -f k8s/configmap.yaml
 kubectl apply --dry-run=client -f k8s/backend-service.yaml -f k8s/backend-deployment.yaml
 kubectl apply --dry-run=client -f k8s/frontend-service.yaml -f k8s/frontend-deployment.yaml
 ```
 
-Only after review, apply the workload (the example Secret manifest has blank values and should not be applied):
+Apply the simulation configuration and workloads:
 
 ```powershell
+kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/backend-service.yaml -f k8s/backend-deployment.yaml
 kubectl apply -f k8s/frontend-service.yaml -f k8s/frontend-deployment.yaml
-kubectl rollout status deployment/backend -n finops
-kubectl rollout status deployment/frontend -n finops
-kubectl get pods,services -n finops
+kubectl -n finops rollout status deployment/backend --timeout=180s
+kubectl -n finops rollout status deployment/frontend --timeout=180s
+kubectl -n finops get pods,services
+kubectl -n finops get events --sort-by=.lastTimestamp
 ```
 
-Use port-forwarding for initial local access; no Ingress controller is required:
+Access the frontend through port-forwarding; no Ingress controller is required:
 
 ```powershell
 kubectl port-forward -n finops svc/frontend 8080:80
 ```
 
-Then open `http://localhost:8080`. In another terminal, verify the backend health endpoint with `kubectl port-forward -n finops svc/backend 8000:8000`, then `Invoke-RestMethod http://localhost:8000/health`. The existing `k8s/ingress.yaml` is optional and intentionally omitted from these steps; do not apply it until a maintained Ingress/Gateway implementation is selected and configured.
+Open `http://localhost:8080`. In a second terminal, the backend can be checked with `kubectl port-forward -n finops svc/backend 8000:8000`, then `Invoke-RestMethod http://localhost:8000/health`. The optional Ingress manifest is not needed for this local path.
 
-The existing Deployments retain non-root security contexts, CPU/memory requests and limits, and HTTP probes. Application outputs are written across `synthetic_data/`, `ml/`, `agents/*/results` and `workflow/results`/`workflow/history`. These paths currently live inside the container filesystem, so scan outputs and approval history are ephemeral across pod replacement. A PVC should wait until the application has a deliberate persistent data-root layout; mounting one volume over `/app` would mask the image code and bundled inputs. No database or storage infrastructure is added here.
+Both Deployments use non-root pod identities (backend 10001, frontend 101), read-only root filesystems, no privilege escalation, dropped Linux capabilities, RuntimeDefault seccomp, resource requests/limits and HTTP probes. The backend init container seeds an `emptyDir` with existing bundled artifacts, then mounts only the data/output, report, log, figure and temporary paths that need writes. Nginx has scoped `/tmp` and cache mounts for PID/temp/cache writes. `emptyDir` data is ephemeral across Pod replacement; the manifests do not add a PVC or database. The existing application still has outputs distributed across `synthetic_data/`, `ml/`, `agents/` and `workflow/`, so plan a deliberate persistent data layout before requiring durable scan history.
 
-## Prometheus and Grafana
+## Prometheus and Grafana monitoring
 
-On Windows 11 with Docker Desktop Linux containers, start only the monitoring services; this leaves running backend and frontend containers untouched:
+On Windows 11 with Docker Desktop Linux containers, the default monitoring profile starts Prometheus, Grafana, and Blackbox Exporter. It probes backend `/health` and frontend `/`; it does not claim to collect Windows host hardware metrics.
+
+Start monitoring without rebuilding or restarting the application containers:
 
 ```powershell
 docker compose --profile monitoring up -d prometheus grafana blackbox
+docker compose ps prometheus grafana blackbox
 Invoke-WebRequest http://localhost:9090/-/ready -UseBasicParsing
 Invoke-WebRequest http://localhost:3000/api/health -UseBasicParsing
-Invoke-WebRequest http://localhost:9090/api/v1/targets -UseBasicParsing
+Invoke-RestMethod http://localhost:9090/api/v1/targets
 ```
 
-The default Prometheus config scrapes itself and Blackbox HTTP probes for backend `/health` and frontend `/`. Prometheus targets are also visible at `http://localhost:9090/targets`. Grafana is at `http://localhost:3000`; set `GRAFANA_ADMIN_PASSWORD` in the local environment before startup and do not print or commit it. Prometheus and Grafana data persist in named volumes. The provisioned dashboard is **Autonomous FinOps Guardian — Containers**. Its availability panel works in the default Windows profile. Container CPU and memory panels need the optional cAdvisor profile.
+Prometheus is available at `http://localhost:9090`; its targets are shown at `/targets`. Grafana is available at `http://localhost:3000` and uses the provisioned Prometheus data source and **Autonomous FinOps Guardian — Containers** dashboard. Set a local `GRAFANA_ADMIN_PASSWORD` before startup; do not commit or print it. Prometheus and Grafana retain their data in named Compose volumes.
 
-### Optional cAdvisor metrics on Docker Desktop
-
-cAdvisor runs inside Docker Desktop's Linux VM and may report Linux container metrics, not Windows hardware. Availability of full metrics depends on Docker Desktop's socket and cgroup access. The optional config avoids privileged mode, `/dev/kmsg`, full host-root mounts, Docker data-directory mounts, and mount propagation. It mounts the Docker daemon socket at `/var/run/docker.sock` plus the cgroup tree. **The socket is highly sensitive:** a read-only bind mount does not restrict Docker API operations. Enable this only if granting that access is acceptable.
-
-To try it, apply the overlay so Prometheus includes the cAdvisor target, and explicitly enable the profile:
+cAdvisor is an optional `docker-metrics` profile for Docker Desktop’s Linux VM/container metrics. It requires access to the Docker daemon socket, which is highly privileged even when bind-mounted read-only. Enable it only when that access is acceptable:
 
 ```powershell
 docker compose --profile monitoring --profile docker-metrics -f docker-compose.yml -f docker-compose.docker-metrics.yml up -d prometheus grafana blackbox cadvisor
 docker compose ps prometheus grafana blackbox cadvisor
-Invoke-WebRequest http://localhost:9090/-/ready -UseBasicParsing
 Invoke-RestMethod http://localhost:9090/api/v1/targets
 ```
 
-If cAdvisor cannot read the Docker socket or cgroups in the current Docker Desktop backend, turn that profile off with `docker compose --profile monitoring up -d prometheus grafana blackbox`; the default Prometheus configuration has no cAdvisor target and does not show an exporter that is intentionally disabled as DOWN. Node Exporter is kept only for a native Linux host under the `linux-host` profile and is not included in the Windows Prometheus targets. It does not report Windows hardware from Docker Desktop's Linux VM. Use Windows-native host telemetry separately if Windows CPU/memory metrics are needed.
+Docker Desktop cAdvisor results depend on Docker socket and cgroup access; they do not represent Windows hardware. Node Exporter is only for native Linux host metrics and is optional under the `linux-host` profile; it is not enabled or scraped by the default Windows monitoring configuration. If cAdvisor is unavailable, use the default monitoring profile without its overlay. Do not leave a disabled exporter as a Prometheus target.
 
-## Security scanning
+## AWS integration and safety
 
-Install Trivy locally to scan built images and repository configuration:
+The backend’s shared Boto3 client loads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`, and `AWS_REGION`. It supports Learner Lab temporary credentials and permanent-style keys. Compose uses the project-root `.env` as a read-only `/app/.env` mount. Kubernetes injects optional credentials only into the backend through the `finops-secrets` Secret reference; the frontend never receives them. Never add actual credentials to `.env.example`, YAML, GitHub, container images, or logs.
 
-```powershell
-trivy fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL .
-docker build -f backend/Dockerfile -t autonomous-finops-backend:local .
-docker build -f frontend/Dockerfile -t autonomous-finops-frontend:local .
-trivy image --severity HIGH,CRITICAL autonomous-finops-backend:local
-trivy image --severity HIGH,CRITICAL autonomous-finops-frontend:local
-python -m pip install pip-audit
-pip-audit -r requirements.txt
-Push-Location frontend
-npm audit --audit-level=high
-Pop-Location
-```
+The Kubernetes ConfigMap explicitly keeps `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`; Compose defaults are also simulation with live scans disabled. A live scan requires deliberate configuration and read-only AWS IAM permissions; do not enable it as part of deployment validation. Remediation remains in simulation mode with human approval intact. Costs shown from resource metadata are estimates; do not describe them as actual AWS billing data unless Cost Explorer integration is implemented and verified.
 
-CI and Jenkins fail on HIGH/CRITICAL findings. The frontend lockfile was updated within the current semver ranges to clear its high findings. The verified npm audit currently reports three MODERATE findings through `minimatch`, a transitive dependency of the development-only TypeScript ESLint parser; npm's only offered forced fix downgrades that parser to 6.x. This is accepted at the configured HIGH/CRITICAL threshold and should be revisited when a compatible upstream parser release resolves it. No HIGH/CRITICAL issues are suppressed. If a scanner reports one, update the relevant dependency/base image and rerun; document any future exception with package, advisory, rationale and expiry before adding an ignore. `.dockerignore` excludes `.env`, local AWS configuration, keys and caches; container users are non-root. Keep credentials in provider/Jenkins secret stores or local environment variables, never images, source, build arguments, or logs.
+## Hosting, rollback and troubleshooting
 
-## Deployment, environment variables and rollback
+The repository retains `render.yaml` for the FastAPI backend and `frontend/vercel.json` for Vercel. The GitHub Actions workflows do not deploy to either service. Configure preview and production environment variables in the respective provider dashboards; keep AWS and Gemini secrets out of Vite frontend variables. Verify backend `/health`, frontend availability, and CORS before promoting a provider-managed release.
 
-The existing `render.yaml` remains the Render backend blueprint and retains simulation mode, disabled AWS scans, Python 3.11 and `/health`. Set `CORS_ALLOW_ORIGINS` and optional `GEMINI_API_KEY` in the Render dashboard as appropriate. For Vercel, keep using the existing `frontend/vercel.json`; set `VITE_API_BASE_URL` to the Render API base URL (without a trailing slash) in the Vercel project settings, and use preview-specific backend/CORS settings for preview deployments. Vite variables are public and must not contain secrets. Verify the Render `/health` URL and the Vercel preview URL before promoting a release. Review the existing Vercel configuration before changing its routing.
+For a provider deployment, use the provider’s previous successful deployment to roll back. For Kubernetes, `kubectl rollout undo deployment/backend -n finops` or `kubectl rollout undo deployment/frontend -n finops`, then verify with `kubectl rollout status`. For Compose, rebuild/restart from a known-good revision after preserving local changes.
 
-Recommended release sequence: review changes and CI on a PR; merge through the repository's normal review policy; verify the Render build and health endpoint; deploy a Vercel preview and test frontend-to-backend requests; promote to production only after the gate and health checks. This repository does not trigger or claim an external production deployment. Configure provider GitHub integrations or the gated Jenkins deployment command explicitly.
-
-For rollback, use Render's previous successful deploy in its dashboard, then redeploy the previous Vercel deployment. If using Jenkins, rerun the previously verified commit/image and run the configured health check. For local Compose, `docker compose down` then check out/build the prior known-good commit (preserve local changes first). Kubernetes rollback: `kubectl rollout undo deployment/backend -n finops` and/or `kubectl rollout undo deployment/frontend -n finops`; confirm with `kubectl rollout status`.
-
-## Troubleshooting
-
-- **Compose reports port in use:** set `BACKEND_PORT=8001` and/or `FRONTEND_PORT=8081` in `.env`, then retry.
-- **Backend is unhealthy:** run `docker compose logs backend`; verify dependencies installed and `EXECUTION_MODE=simulation`. `/health` does not require AWS credentials.
-- **Frontend loads but API fails:** check `docker compose ps`, `docker compose logs backend frontend`, and `http://localhost:8080/api/health`; make sure frontend was built with `/api` and Nginx can resolve `backend` on the Compose network.
-- **Jenkins cannot find Docker/Trivy:** install them on the agent and ensure the Jenkins service account can access the Docker daemon; do not expose a privileged daemon to untrusted builds.
-- **CI dependency audit fails:** inspect the advisory and update lock/dependency pins; do not suppress scan output.
-- **Minikube pods cannot pull images:** confirm the image was built after selecting Minikube's Docker environment and `imagePullPolicy` remains `IfNotPresent`.
-- **Prometheus target is down:** check `docker compose --profile monitoring ps`, inspect Prometheus `/targets`, and view `docker compose logs prometheus blackbox cadvisor`.
+- **Compose port is busy:** set `BACKEND_PORT` or `FRONTEND_PORT` in a local `.env` and rerun `docker compose config --quiet`.
+- **Backend health fails:** inspect `docker compose logs backend`; `/health` does not require AWS credentials. Confirm `EXECUTION_MODE=simulation`.
+- **Frontend API requests fail:** verify both services are healthy and that the browser requests `/api/` through Nginx.
+- **Kubernetes Pod is not ready:** inspect `kubectl -n finops describe pod <pod-name>` and `kubectl -n finops logs <pod-name> -c <container-name>`; check that the matching local image exists and `emptyDir` mounts are writable by the configured UID/GID.
+- **Prometheus probe is down:** inspect `/targets`, Blackbox logs, and the Compose service names/ports.
+- **Security audit fails:** inspect the reported advisory or misconfiguration and update the affected dependency/configuration. Do not lower severity, suppress findings, or commit secrets to make a check pass.
