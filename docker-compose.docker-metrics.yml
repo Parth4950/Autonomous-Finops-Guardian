@@ -1,0 +1,7 @@
+# Optional overlay: enables the cAdvisor scrape only when explicitly selected.
+services:
+  prometheus:
+    volumes:
+      - ./monitoring/prometheus/prometheus.docker-metrics.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - cadvisor
