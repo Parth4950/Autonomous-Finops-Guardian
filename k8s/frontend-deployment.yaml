@@ -11,6 +11,13 @@ spec:
     metadata:
       labels: { app: frontend }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: frontend
           image: autonomous-finops-frontend:local
@@ -30,8 +37,17 @@ spec:
             periodSeconds: 10
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 101
             runAsGroup: 101
             capabilities: { drop: [ALL] }
             seccompProfile: { type: RuntimeDefault }
+          volumeMounts:
+            - { name: nginx-tmp, mountPath: /tmp }
+            - { name: nginx-cache, mountPath: /var/cache/nginx }
+      volumes:
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}

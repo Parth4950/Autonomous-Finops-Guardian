@@ -11,6 +11,54 @@ spec:
     metadata:
       labels: { app: backend }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: initialize-runtime-data
+          image: autonomous-finops-backend:local
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              set -eu;
+              for path in
+              agents/scout/results
+              agents/risk_assessor/results agents/risk_assessor/figures
+              agents/auditor/results agents/auditor/figures
+              agents/planner/results agents/planner/figures
+              agents/executor/results agents/executor/figures agents/executor/logs
+              ml/forecasting/data ml/forecasting/results ml/forecasting/figures
+              ml/isolation_forest/results ml/isolation_forest/figures
+              workflow/results workflow/history synthetic_data/figures tmp
+              ; do
+                mkdir -p "/runtime/$path";
+                if [ -d "/app/$path" ]; then cp -a "/app/$path/." "/runtime/$path/"; fi;
+              done;
+              for path in
+              synthetic_data/cloud_resources.csv synthetic_data/scan_source.json
+              ml/forecasting/data/historical_cpu_usage.csv
+              ; do
+                mkdir -p "/runtime/$(dirname "$path")";
+                if [ -f "/app/$path" ]; then cp -a "/app/$path" "/runtime/$path"; else touch "/runtime/$path"; fi;
+              done
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            capabilities:
+              drop: [ALL]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - { name: runtime-data, mountPath: /runtime }
       containers:
         - name: backend
           image: autonomous-finops-backend:local
@@ -20,6 +68,8 @@ spec:
           envFrom:
             - configMapRef: { name: finops-config }
             - secretRef: { name: finops-secrets, optional: true }
+          env:
+            - { name: MPLCONFIGDIR, value: /tmp/matplotlib }
           resources:
             requests: { cpu: 250m, memory: 512Mi }
             limits: { cpu: "1", memory: 1536Mi }
@@ -35,8 +85,34 @@ spec:
             timeoutSeconds: 5
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 10001
             runAsGroup: 10001
             capabilities: { drop: [ALL] }
             seccompProfile: { type: RuntimeDefault }
+          volumeMounts:
+            - { name: runtime-data, mountPath: /app/agents/scout/results, subPath: agents/scout/results }
+            - { name: runtime-data, mountPath: /app/agents/risk_assessor/results, subPath: agents/risk_assessor/results }
+            - { name: runtime-data, mountPath: /app/agents/risk_assessor/figures, subPath: agents/risk_assessor/figures }
+            - { name: runtime-data, mountPath: /app/agents/auditor/results, subPath: agents/auditor/results }
+            - { name: runtime-data, mountPath: /app/agents/auditor/figures, subPath: agents/auditor/figures }
+            - { name: runtime-data, mountPath: /app/agents/planner/results, subPath: agents/planner/results }
+            - { name: runtime-data, mountPath: /app/agents/planner/figures, subPath: agents/planner/figures }
+            - { name: runtime-data, mountPath: /app/agents/executor/results, subPath: agents/executor/results }
+            - { name: runtime-data, mountPath: /app/agents/executor/figures, subPath: agents/executor/figures }
+            - { name: runtime-data, mountPath: /app/agents/executor/logs, subPath: agents/executor/logs }
+            - { name: runtime-data, mountPath: /app/ml/forecasting/data, subPath: ml/forecasting/data }
+            - { name: runtime-data, mountPath: /app/ml/forecasting/results, subPath: ml/forecasting/results }
+            - { name: runtime-data, mountPath: /app/ml/forecasting/figures, subPath: ml/forecasting/figures }
+            - { name: runtime-data, mountPath: /app/ml/isolation_forest/results, subPath: ml/isolation_forest/results }
+            - { name: runtime-data, mountPath: /app/ml/isolation_forest/figures, subPath: ml/isolation_forest/figures }
+            - { name: runtime-data, mountPath: /app/workflow/results, subPath: workflow/results }
+            - { name: runtime-data, mountPath: /app/workflow/history, subPath: workflow/history }
+            - { name: runtime-data, mountPath: /app/synthetic_data/figures, subPath: synthetic_data/figures }
+            - { name: runtime-data, mountPath: /app/synthetic_data/cloud_resources.csv, subPath: synthetic_data/cloud_resources.csv }
+            - { name: runtime-data, mountPath: /app/synthetic_data/scan_source.json, subPath: synthetic_data/scan_source.json }
+            - { name: runtime-data, mountPath: /tmp, subPath: tmp }
+      volumes:
+        - name: runtime-data
+          emptyDir: {}
