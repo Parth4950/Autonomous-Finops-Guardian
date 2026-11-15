@@ -40,7 +40,7 @@ The platform uses modular agents, a FastAPI backend, and a React operator dashbo
 | Executor Agent | ✅ Done | Simulation mode + rollback planning |
 | FastAPI backend | ✅ Done | REST API over agent pipeline outputs |
 | React dashboard | ✅ Done | Full operator UI with live API data |
-| Live Cloud Scan | ✅ Done | Synthetic or Live AWS pipeline from Overview |
+| Live Cloud Scan | ✅ Done | Synthetic or explicitly enabled read-only AWS discovery from Overview |
 | LangGraph orchestration | 🔜 Planned | Stateful agent workflow |
 
 ---
@@ -153,12 +153,14 @@ copy .env.example .env   # Windows
 ```env
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_SESSION_TOKEN=   # required for AWS Academy Learner Lab temporary credentials
 AWS_REGION=ap-southeast-2
 GEMINI_API_KEY=your_gemini_api_key
 EXECUTION_MODE=simulation
+ALLOW_AWS_SCAN=false
 ```
 
-`GEMINI_API_KEY` and AWS credentials are optional for the default dashboard workflow, which reads **synthetic pipeline outputs**. Agents fall back to deterministic templates when Gemini is unavailable.
+Keep actual values only in your local, ignored `.env`; `.env.example` contains blank placeholders. AWS keys are optional for synthetic scans. For AWS Academy Learner Lab, provide the access key, secret key, session token, and region together. The Compose configuration passes these variables only to the backend and mounts the root `.env` read-only. Do not add credentials to source, images, Kubernetes manifests, or GitHub Actions. `ALLOW_AWS_SCAN=false` blocks live discovery by default; enabling read-only scans is a separate deliberate configuration. `EXECUTION_MODE=simulation` keeps remediation simulated. `GEMINI_API_KEY` is optional; agents use deterministic explanations when it is absent.
 
 ### 3. Install frontend
 
@@ -352,13 +354,57 @@ Plain `uvicorn --reload` on the whole repo will restart the API when pipeline CS
 
 ---
 
+## DevOps and deployments
+
+The project architecture is a React 18 + TypeScript/Vite dashboard served by Nginx, a Python 3.11 FastAPI backend, Scout/ML/FinOps agents, and a human approval workflow. Read-only AWS discovery is optional; remediation remains in simulation mode by default. See [DEVOPS.md](DEVOPS.md) for complete setup and rollback details.
+
+### Docker Compose
+
+With Docker Desktop using Linux containers, build and run the app from the repository root:
+
+```powershell
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+Invoke-RestMethod http://localhost:8000/health
+Invoke-WebRequest http://localhost:8080/api/health -UseBasicParsing
+```
+
+Compose defaults to `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`. The backend alone receives AWS variables; the frontend has no AWS secrets.
+
+### AWS configuration
+
+For Learner Lab temporary credentials, set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_REGION` in local `.env`. For standard long-lived style access keys, omit `AWS_SESSION_TOKEN`. The app does not log credentials. AWS scans require explicitly allowing them; keep `ALLOW_AWS_SCAN=false` for synthetic-only runs. AWS permissions should be read-only for scans. No AWS write/remediation permissions are required by the DevOps workflows.
+
+### Kubernetes
+
+Optional local Kubernetes manifests are under `k8s/`. The ConfigMap sets simulation mode and disables AWS scans. Create a Secret locally only if later needed; never apply `k8s/secret.example.yaml` or commit real secret files. For Docker Desktop instructions, validation, port-forwarding, and rollback, see [DEVOPS.md](DEVOPS.md#kubernetes-optional-local-deployment).
+
+### Jenkins and GitHub Actions
+
+The root [Jenkinsfile](Jenkinsfile) runs tests, frontend checks, image builds, and Trivy scans. Its deployment stage is disabled unless explicitly configured and manually approved; it does not deploy to production by default. [GitHub Actions CI](.github/workflows/ci.yml) runs backend tests, frontend lint/build, Docker build validation, and config validation on pushes and pull requests targeting `main`. [Security workflow](.github/workflows/security.yml) audits dependencies and scans the repository for vulnerabilities, misconfiguration, and secrets. Neither workflow needs AWS credentials, a local cluster, or deployment secrets.
+
+### Prometheus and Grafana monitoring
+
+Start the Windows-compatible monitoring profile without rebuilding or recreating the application services:
+
+```powershell
+docker compose --profile monitoring up -d prometheus grafana blackbox
+Invoke-WebRequest http://localhost:9090/-/ready -UseBasicParsing
+Invoke-WebRequest http://localhost:3000/api/health -UseBasicParsing
+```
+
+Prometheus checks the backend/frontend availability through Blackbox Exporter. cAdvisor is an optional Docker Desktop Linux VM container-metrics profile, not a Windows host monitor; it needs access to the Docker socket and should be enabled only when that access is acceptable. See [DEVOPS.md](DEVOPS.md#prometheus-and-grafana) for the opt-in command. Node Exporter is Linux-host-only and excluded from Windows monitoring targets.
+
+---
+
 ## Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
 | ML + agents pipeline | Isolation Forest, Prophet, Risk, Audit, Plan, Execute | ✅ |
 | FastAPI + React dashboard | Live API-backed operator UI | ✅ |
-| Live AWS scan integration | Wire Scout output into dashboard pipeline | 🔜 |
+| Live AWS scan integration | Read-only Scout discovery from the dashboard when explicitly enabled | ✅ |
 | LangGraph orchestration | Stateful multi-agent workflow | 🔜 |
 | PostgreSQL persistence | Replace CSV/JSON file stores | 🔜 |
 

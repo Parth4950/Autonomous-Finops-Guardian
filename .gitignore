@@ -36,8 +36,16 @@ venv.bak/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+!**/.env.example
 .env.local
-.env.*.local
+
+# Local Kubernetes credentials
+k8s/*secret*.yaml
+k8s/*secret*.yml
+!k8s/secret.example.yaml
+k8s/secret.env
 
 # Testing / coverage
 .pytest_cache/
@@ -50,6 +58,11 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+
+# Terraform local state and provider cache
+*.tfstate
+*.tfstate.*
+.terraform/
 
 # Type checking
 .mypy_cache/

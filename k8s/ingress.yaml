@@ -1,0 +1,25 @@
+# Optional only: requires a separately configured, maintained controller.
+# Initial local access should use kubectl port-forward; do not apply by default.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: finops
+  namespace: finops
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: finops.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: frontend, port: { number: 80 } }
+          - path: /health
+            pathType: Exact
+            backend:
+              service: { name: backend, port: { number: 8000 } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: frontend, port: { number: 80 } }
