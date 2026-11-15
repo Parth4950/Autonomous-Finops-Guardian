@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finops-config
+  namespace: finops
+data:
+  EXECUTION_MODE: simulation
+  ALLOW_AWS_SCAN: "false"
+  AWS_REGION: ap-south-1
+  MPLBACKEND: Agg
+  CORS_ALLOW_ORIGINS: http://localhost
