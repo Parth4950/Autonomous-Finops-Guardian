@@ -21,6 +21,11 @@ certifi
 # Database (future phases)
 sqlalchemy
 psycopg2-binary
+alembic
+argon2-cffi
+cryptography
+email-validator
+slowapi
 
 # API
 fastapi
