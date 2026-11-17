@@ -9,6 +9,8 @@ if (!rawBaseUrl && !isDev) {
   console.error("VITE_API_BASE_URL is not configured; production API calls will use /api and require a same-origin proxy.");
 }
 
+const SIMULATION_MODE_STORAGE_KEY = "finops_simulation_mode";
+
 let csrfToken: string | null = null;
 
 export function clearCsrfToken() {
@@ -19,6 +21,28 @@ export function setCsrfToken(value: string) {
   csrfToken = value;
 }
 
+export function isSimulationModeStored(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(SIMULATION_MODE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function setSimulationModeStored(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (enabled) {
+      window.sessionStorage.setItem(SIMULATION_MODE_STORAGE_KEY, "true");
+    } else {
+      window.sessionStorage.removeItem(SIMULATION_MODE_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+}
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -27,6 +51,12 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
+  const url = config.url ?? "";
+  const isAuthEndpoint = /^\/auth\/(?!csrf$)/.test(url);
+  if (isSimulationModeStored() && !isAuthEndpoint) {
+    config.headers.set("X-FinOps-Mode", "simulation");
+  }
+
   if (["post", "put", "patch", "delete"].includes((config.method ?? "get").toLowerCase())) {
     if (!csrfToken) {
       const response = await apiClient.get<{ csrf_token: string }>("/auth/csrf");
@@ -69,7 +99,12 @@ apiClient.interceptors.response.use(logResponse, (error) => {
   if (axios.isAxiosError(error)) {
     const url = error.config?.url ?? "";
     const isCredentialSubmission = /\/auth\/(login|register)$/.test(url);
-    if (error.response?.status === 401 && !isCredentialSubmission && typeof window !== "undefined") {
+    if (
+      error.response?.status === 401 &&
+      !isCredentialSubmission &&
+      !isSimulationModeStored() &&
+      typeof window !== "undefined"
+    ) {
       window.dispatchEvent(new Event("auth:expired"));
     }
     const detail =

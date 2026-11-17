@@ -1,4 +1,4 @@
-import { Bell, Menu, Search, Settings } from "lucide-react";
+import { Bell, FlaskConical, LogIn, Menu, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataModeNotice } from "@/components/shared/DataModeNotice";
 import { useHealth } from "@/hooks/useApiQueries";
@@ -14,7 +14,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuClick, title = "Dashboard" }: NavbarProps) {
-  const { user, logout } = useAuth();
+  const { user, isSimulationMode, exitSimulationMode, logout } = useAuth();
   const navigate = useNavigate();
   const { data, isError, isFetching, dataUpdatedAt, isLoading } = useHealth();
   const scanMode = useDataScanMode();
@@ -89,10 +89,44 @@ export function Navbar({ onMenuClick, title = "Dashboard" }: NavbarProps) {
         >
           <Settings className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" className="ml-1 h-9 gap-2 px-2" title={user?.email} onClick={() => { void logout().catch(() => undefined).finally(() => navigate("/login", { replace: true })); }}>
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">{(user?.full_name??"U").split(/\s+/).map(part=>part[0]).slice(0,2).join("").toUpperCase()}</span>
-          <span className="hidden text-xs md:inline">Sign out</span>
-        </Button>
+        {isSimulationMode && !user ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-1 h-9 gap-2 px-3"
+            title="Exit Simulation Mode and sign in to your personal workspace"
+            onClick={() => {
+              exitSimulationMode();
+              navigate("/login", { replace: true });
+            }}
+          >
+            <FlaskConical className="h-3.5 w-3.5 text-primary" />
+            <span className="hidden text-xs sm:inline">Simulation Guest</span>
+            <LogIn className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">Sign in</span>
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            className="ml-1 h-9 gap-2 px-2"
+            title={user?.email}
+            onClick={() => {
+              void logout()
+                .catch(() => undefined)
+                .finally(() => navigate("/login", { replace: true }));
+            }}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+              {(user?.full_name ?? "U")
+                .split(/\s+/)
+                .map((part) => part[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+            </span>
+            <span className="hidden text-xs md:inline">Sign out</span>
+          </Button>
+        )}
       </div>
     </header>
   );

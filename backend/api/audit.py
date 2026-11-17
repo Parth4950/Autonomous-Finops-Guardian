@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import current_user
+from backend.auth.dependencies import current_user_or_simulation as current_user
 from backend.db.session import get_db
 from backend.models.auth import User
 from backend.schemas.audit import AuditResultItem, ExecutiveReport

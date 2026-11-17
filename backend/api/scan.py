@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.auth.dependencies import current_user
+from backend.auth.dependencies import current_user_or_simulation as current_user, is_simulation_user
 from backend.api.deps import get_scan_service
 from backend.db.session import get_db
 from backend.models.auth import User
@@ -28,6 +28,11 @@ def start_scan(
     user: User = Depends(current_user),
 ) -> ScanStartResponse:
     """Run the full discovery-to-planning pipeline in the background."""
+    if is_simulation_user(user) and (request.mode != "synthetic" or request.aws_account_id is not None):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Simulation mode only supports synthetic demo scans. Sign in to run live AWS scans.",
+        )
     try:
         state = service.start_scan(
             user_id=user.id,

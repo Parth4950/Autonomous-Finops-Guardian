@@ -15,10 +15,11 @@ import RegisterPage from "@/pages/Register";
 import { AuthProvider, useAuth } from "@/auth/AuthContext";
 
 function ProtectedApp() {
-  const {user,loading}=useAuth(); const location=useLocation();
+  const { user, isSimulationMode, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Restoring session…</div>;
-  if (!user) return <Navigate to="/login" replace state={{from:location}}/>;
-  return <AppLayout/>;
+  if (!user && !isSimulationMode) return <Navigate to="/login" replace state={{ from: location }} />;
+  return <AppLayout />;
 }
 
 const routes = [

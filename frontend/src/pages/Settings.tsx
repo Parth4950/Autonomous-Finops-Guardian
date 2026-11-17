@@ -101,9 +101,15 @@ function verificationBadgeVariant(status: AWSAccount["verification_status"]) {
 }
 
 export default function SettingsPage() {
+  const { user, isSimulationMode } = useAuth();
+  const isGuestSimulation = isSimulationMode && !user;
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab: SettingsTab = isValidTab(tabParam) ? tabParam : "aws";
+  const activeTab: SettingsTab = isValidTab(tabParam)
+    ? tabParam
+    : isGuestSimulation
+      ? "appearance"
+      : "aws";
 
   const setActiveTab = (tab: SettingsTab) => {
     setSearchParams({ tab }, { replace: true });
@@ -132,12 +138,77 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {activeTab === "aws" && <AwsAccountsSection />}
-      {activeTab === "profile" && <ProfileSection />}
+      {activeTab === "aws" &&
+        (isGuestSimulation ? (
+          <SimulationAccountGate
+            title="AWS Account Connections Require a Personal Workspace"
+            description="Simulation Mode runs strictly against isolated synthetic demo data and never connects to live AWS accounts. Sign in or create a personal account to connect IAM or AWS Academy Learner Lab credentials."
+          />
+        ) : (
+          <AwsAccountsSection />
+        ))}
+      {activeTab === "profile" &&
+        (isGuestSimulation ? (
+          <SimulationAccountGate
+            title="User Profile Unavailable in Simulation Mode"
+            description="You are currently exploring Autonomous FinOps Guardian as a Simulation Guest. Sign in or create an account to manage your personal profile."
+          />
+        ) : (
+          <ProfileSection />
+        ))}
       {activeTab === "appearance" && <AppearanceSection />}
       {activeTab === "notifications" && <NotificationsSection />}
-      {activeTab === "security" && <SecuritySection />}
+      {activeTab === "security" &&
+        (isGuestSimulation ? (
+          <SimulationAccountGate
+            title="Account Security Requires Authentication"
+            description="Password management and multi-device session revocation apply to personal accounts. Sign in or create an account to configure security settings."
+          />
+        ) : (
+          <SecuritySection />
+        ))}
     </div>
+  );
+}
+
+function SimulationAccountGate({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  const { exitSimulationMode } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <Card className="max-w-2xl">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-3">
+        <Button
+          type="button"
+          onClick={() => {
+            exitSimulationMode();
+            navigate("/login");
+          }}
+        >
+          Sign In to Personal Workspace
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            exitSimulationMode();
+            navigate("/register");
+          }}
+        >
+          Create Personal Account
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

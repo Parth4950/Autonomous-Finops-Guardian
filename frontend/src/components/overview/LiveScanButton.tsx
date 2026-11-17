@@ -6,12 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/auth/AuthContext";
 import { useAwsAccounts, useHealth, useScanSource } from "@/hooks/useApiQueries";
 import { useCloudScan } from "@/hooks/useCloudScan";
 import type { ScanMode } from "@/api/types";
 import { AWS_REGIONS } from "@/pages/Settings";
 import { cn } from "@/lib/utils";
-import { Cloud, FlaskConical, KeyRound, Loader2, Radar } from "lucide-react";
+import { Cloud, FlaskConical, KeyRound, Loader2, LogIn, Radar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -19,10 +20,12 @@ const ENV_DEFAULT_ACCOUNT = "__env_default__";
 
 export function LiveScanButton() {
   const navigate = useNavigate();
+  const { user, isSimulationMode, exitSimulationMode } = useAuth();
+  const isGuestSimulation = isSimulationMode && !user;
   const { data: scanSource } = useScanSource();
   const { data: health } = useHealth();
-  const { data: awsAccounts } = useAwsAccounts();
-  const awsScanEnabled = health?.aws_scan_enabled ?? true;
+  const { data: awsAccounts } = useAwsAccounts(!isGuestSimulation);
+  const awsScanEnabled = (health?.aws_scan_enabled ?? true) && !isGuestSimulation;
   const [scanMode, setScanMode] = useState<ScanMode>("synthetic");
   const [selectedAccountId, setSelectedAccountId] = useState<string>(ENV_DEFAULT_ACCOUNT);
   const [selectedRegion, setSelectedRegion] = useState<string>("us-east-1");
@@ -69,7 +72,7 @@ export function LiveScanButton() {
   };
 
   const handleStartScan = () => {
-    if (scanMode === "aws") {
+    if (scanMode === "aws" && awsScanEnabled) {
       startScan({
         mode: "aws",
         aws_account_id:
@@ -86,7 +89,29 @@ export function LiveScanButton() {
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {awsScanEnabled ? (
+        {isGuestSimulation ? (
+          <>
+            <span className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-xs text-muted-foreground">
+              <FlaskConical className="mr-2 h-3.5 w-3.5 text-primary" />
+              Synthetic Demo Scan
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs"
+              onClick={() => {
+                exitSimulationMode();
+                navigate("/login");
+              }}
+              disabled={isScanning}
+              title="Sign in to connect real AWS accounts and run live scans"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              Sign in for Live AWS
+            </Button>
+          </>
+        ) : awsScanEnabled ? (
           <Select
             value={scanMode}
             onValueChange={(value) => setScanMode(value as ScanMode)}
