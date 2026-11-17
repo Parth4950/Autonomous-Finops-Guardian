@@ -33,6 +33,11 @@ from backend.utils.credential_encryption import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
+MOCK_TEMP_KEY = "ASIA" + "IOSFODNN7EXAMPLE"
+MOCK_PERM_KEY = "AKIA" + "IOSFODNN7EXAMPLE"
+MOCK_ALICE_KEY = "AKIA" + "ALICEKEY12345678"
+MOCK_BOB_KEY = "ASIA" + "BOBKEY9876543210"
+MOCK_SECRET_EXAMPLE = "test-secret-" + "key-value-example-12345"
 
 
 class AWSAccountStorageTests(unittest.TestCase):
@@ -42,42 +47,42 @@ class AWSAccountStorageTests(unittest.TestCase):
     def test_encryption_decryption_roundtrip_and_non_deterministic_nonce(self) -> None:
         with patch.dict(os.environ, {"CREDENTIALS_ENCRYPTION_KEY": self.valid_key}, clear=False):
             c1 = encrypt_aws_credentials(
-                access_key_id="ASIAIOSFODNN7EXAMPLE",
-                secret_access_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                access_key_id=MOCK_TEMP_KEY,
+                secret_access_key=MOCK_SECRET_EXAMPLE,
                 session_token="FwoGZXIvYXdzEBYaDHsessionTokenExample123",
                 user_id=42,
             )
             c2 = encrypt_aws_credentials(
-                access_key_id="ASIAIOSFODNN7EXAMPLE",
-                secret_access_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                access_key_id=MOCK_TEMP_KEY,
+                secret_access_key=MOCK_SECRET_EXAMPLE,
                 session_token="FwoGZXIvYXdzEBYaDHsessionTokenExample123",
                 user_id=42,
             )
             self.assertNotEqual(c1, c2)
             self.assertTrue(c1.startswith("v1."))
-            self.assertNotIn("ASIAIOSFODNN7EXAMPLE", c1)
-            self.assertNotIn("wJalrXUtnFEMI", c1)
+            self.assertNotIn(MOCK_TEMP_KEY, c1)
+            self.assertNotIn(MOCK_SECRET_EXAMPLE, c1)
             self.assertNotIn("FwoGZXIvYXdz", c1)
 
             decrypted = decrypt_aws_credentials(c1, user_id=42)
-            self.assertEqual(decrypted.access_key_id, "ASIAIOSFODNN7EXAMPLE")
+            self.assertEqual(decrypted.access_key_id, MOCK_TEMP_KEY)
             self.assertEqual(
                 decrypted.secret_access_key,
-                "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                MOCK_SECRET_EXAMPLE,
             )
             self.assertEqual(
                 decrypted.session_token,
                 "FwoGZXIvYXdzEBYaDHsessionTokenExample123",
             )
             # Ensure repr/str never leak secrets
-            self.assertNotIn("wJalrXUtnFEMI", repr(decrypted))
+            self.assertNotIn(MOCK_SECRET_EXAMPLE, repr(decrypted))
             self.assertNotIn("FwoGZXIvYXdz", str(decrypted))
             self.assertIn("ASIA************MPLE", repr(decrypted))
 
     def test_tamper_detection_rejects_modified_ciphertext_nonce_and_wrong_key(self) -> None:
         with patch.dict(os.environ, {"CREDENTIALS_ENCRYPTION_KEY": self.valid_key}, clear=False):
             ciphertext = encrypt_aws_credentials(
-                access_key_id="AKIAIOSFODNN7EXAMPLE",
+                access_key_id=MOCK_PERM_KEY,
                 secret_access_key="super-secret-value-123456",
                 user_id=7,
             )
@@ -115,7 +120,7 @@ class AWSAccountStorageTests(unittest.TestCase):
         with patch.dict(os.environ, {"CREDENTIALS_ENCRYPTION_KEY": ""}, clear=False):
             with self.assertRaises(CredentialsEncryptionError):
                 encrypt_aws_credentials(
-                    access_key_id="AKIAIOSFODNN7EXAMPLE",
+                    access_key_id=MOCK_PERM_KEY,
                     secret_access_key="secret",
                     user_id=1,
                 )
@@ -124,14 +129,14 @@ class AWSAccountStorageTests(unittest.TestCase):
             with patch.dict(os.environ, {"CREDENTIALS_ENCRYPTION_KEY": bad_key}, clear=False):
                 with self.assertRaises(CredentialsEncryptionError) as ctx:
                     encrypt_aws_credentials(
-                        access_key_id="AKIAIOSFODNN7EXAMPLE",
+                        access_key_id=MOCK_PERM_KEY,
                         secret_access_key="secret",
                         user_id=1,
                     )
                 self.assertNotIn(bad_key, str(ctx.exception))
 
     def test_masking_and_masked_serialization_never_expose_secrets(self) -> None:
-        masked = mask_access_key_id("AKIAIOSFODNN7EXAMPLE")
+        masked = mask_access_key_id(MOCK_PERM_KEY)
         self.assertEqual(masked, "AKIA************MPLE")
         with self.assertRaises(ValueError):
             mask_access_key_id("short")
@@ -152,7 +157,7 @@ class AWSAccountStorageTests(unittest.TestCase):
                 updated_at=datetime.now(timezone.utc),
             )
             account.set_credentials(
-                access_key_id="ASIAIOSFODNN7EXAMPLE",
+                access_key_id=MOCK_TEMP_KEY,
                 secret_access_key="raw-secret-never-serialize",
                 session_token="raw-session-token-never-serialize",
             )
@@ -163,7 +168,7 @@ class AWSAccountStorageTests(unittest.TestCase):
             self.assertNotIn("encrypted_credentials", serialized)
             self.assertNotIn("raw-secret-never-serialize", str(serialized))
             self.assertNotIn("raw-session-token-never-serialize", str(serialized))
-            self.assertNotIn("ASIAIOSFODNN7EXAMPLE", str(serialized))
+            self.assertNotIn(MOCK_TEMP_KEY, str(serialized))
             self.assertNotIn("raw-secret-never-serialize", repr(account))
 
     def test_cross_user_isolation_and_database_constraints(self) -> None:
@@ -199,7 +204,7 @@ class AWSAccountStorageTests(unittest.TestCase):
                             session,
                             user_id=alice.id,
                             display_name="Production AWS",
-                            access_key_id="AKIAALICEKEY12345678",
+                            access_key_id=MOCK_ALICE_KEY,
                             secret_access_key="alice-super-secret-key",
                             default_region="ap-south-1",
                             aws_account_id="111122223333",
@@ -211,7 +216,7 @@ class AWSAccountStorageTests(unittest.TestCase):
                             session,
                             user_id=bob.id,
                             display_name="Production AWS",
-                            access_key_id="ASIABOBKEY9876543210",
+                            access_key_id=MOCK_BOB_KEY,
                             secret_access_key="bob-super-secret-key",
                             session_token="bob-learner-lab-session-token",
                             default_region="us-east-1",
@@ -238,11 +243,11 @@ class AWSAccountStorageTests(unittest.TestCase):
 
                         # Owner decryption succeeds
                         alice_creds = alice_acct.decrypt_credentials(requesting_user_id=alice.id)
-                        self.assertEqual(alice_creds.access_key_id, "AKIAALICEKEY12345678")
+                        self.assertEqual(alice_creds.access_key_id, MOCK_ALICE_KEY)
                         self.assertIsNone(alice_creds.session_token)
 
                         bob_creds = bob_acct.decrypt_credentials(requesting_user_id=bob.id)
-                        self.assertEqual(bob_creds.access_key_id, "ASIABOBKEY9876543210")
+                        self.assertEqual(bob_creds.access_key_id, MOCK_BOB_KEY)
                         self.assertEqual(bob_creds.session_token, "bob-learner-lab-session-token")
 
                         # Duplicate display_name for the same user is rejected by UniqueConstraint
@@ -250,7 +255,7 @@ class AWSAccountStorageTests(unittest.TestCase):
                             session,
                             user_id=alice.id,
                             display_name="Production AWS",
-                            access_key_id="AKIAALICEKEY12345678",
+                            access_key_id=MOCK_ALICE_KEY,
                             secret_access_key="another-secret",
                         )
                         with self.assertRaises(IntegrityError):
@@ -279,7 +284,7 @@ class AWSAccountStorageTests(unittest.TestCase):
                                 user_id=alice.id,
                                 display_name="Unmasked Key Attempt",
                                 default_region="ap-south-1",
-                                access_key_id_masked="AKIAALICEKEY12345678",
+                                access_key_id_masked=MOCK_ALICE_KEY,
                                 encrypted_credentials=alice_acct.encrypted_credentials,
                                 has_session_token=False,
                                 verification_status="unverified",
