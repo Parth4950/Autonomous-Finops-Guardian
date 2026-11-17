@@ -6,7 +6,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    startCommand: alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -18,6 +18,12 @@ services:
       - key: MPLBACKEND
         value: Agg
       - key: CORS_ALLOW_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_SECRET_KEY
+        sync: false
+      - key: CREDENTIALS_ENCRYPTION_KEY
         sync: false
       # Optional — Gemini explanations on hosted demo (set in Render dashboard)
       - key: GEMINI_API_KEY

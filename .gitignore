@@ -49,6 +49,7 @@ k8s/secret.env
 
 # Testing / coverage
 .pytest_cache/
+.pytest*/
 .coverage
 .coverage.*
 htmlcov/
@@ -58,6 +59,7 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+tmp*/
 
 # Terraform local state and provider cache
 *.tfstate
@@ -97,4 +99,12 @@ frontend/dist/
 
 # Local data
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+runtime/
+autonomous-finops-guardian/venv/

@@ -35,7 +35,8 @@ spec:
               agents/executor/results agents/executor/figures agents/executor/logs
               ml/forecasting/data ml/forecasting/results ml/forecasting/figures
               ml/isolation_forest/results ml/isolation_forest/figures
-              workflow/results workflow/history synthetic_data/figures tmp
+              workflow/results workflow/history synthetic_data/figures
+              runtime/workspaces tmp
               ; do
                 mkdir -p "/runtime/$path";
                 if [ -d "/app/$path" ]; then cp -a "/app/$path/." "/runtime/$path/"; fi;
@@ -112,6 +113,8 @@ spec:
             - { name: runtime-data, mountPath: /app/synthetic_data/figures, subPath: synthetic_data/figures }
             - { name: runtime-data, mountPath: /app/synthetic_data/cloud_resources.csv, subPath: synthetic_data/cloud_resources.csv }
             - { name: runtime-data, mountPath: /app/synthetic_data/scan_source.json, subPath: synthetic_data/scan_source.json }
+            - { name: runtime-data, mountPath: /app/runtime, subPath: runtime }
+            - { name: runtime-data, mountPath: /app/runtime/workspaces, subPath: runtime/workspaces }
             - { name: runtime-data, mountPath: /tmp, subPath: tmp }
       volumes:
         - name: runtime-data
