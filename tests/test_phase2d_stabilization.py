@@ -15,6 +15,7 @@ import yaml
 from agents.scout.aws_metadata import AWSInfrastructureMetadataLoader
 from agents.scout.resource_exporter import AwsResourceExporter, is_aws_scan_mode
 from backend.config.deployment import cors_allow_origins
+from backend.config.settings import database_connect_args, database_url
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -131,6 +132,19 @@ class Phase2DStabilizationTests(unittest.TestCase):
 
         query_state = (ROOT / "frontend" / "src" / "components" / "shared" / "QueryState.tsx").read_text(encoding="utf-8")
         self.assertIn("isNoScanDataError", query_state)
+
+    def test_supabase_and_render_postgres_url_normalization(self) -> None:
+        supabase_pooler = (
+            "postgresql://postgres.projectref:supaPass123@aws-0-ap-south-1.pooler.supabase.com:6543/"
+            "postgres?pgbouncer=true"
+        )
+        with patch.dict(os.environ, {"DATABASE_URL": supabase_pooler}, clear=False):
+            normalized = database_url()
+            self.assertTrue(normalized.startswith("postgresql+psycopg2://"))
+            self.assertNotIn("pgbouncer", normalized)
+            self.assertIn("supaPass123", normalized)
+            self.assertEqual(database_connect_args(normalized), {"sslmode": "require"})
+
 
 
 if __name__ == "__main__":

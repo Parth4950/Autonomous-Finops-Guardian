@@ -19,12 +19,18 @@ class CredentialsEncryptionError(RuntimeError):
 
 
 def database_url() -> str:
-    """Return SQLAlchemy URL from DATABASE_URL, normalizing Railway's scheme."""
-    value = os.getenv("DATABASE_URL", "sqlite:///./finops-auth.db").strip()
+    """Return SQLAlchemy URL from DATABASE_URL, normalizing Supabase/Render/Railway schemes."""
+    value = os.getenv("DATABASE_URL", "sqlite:///./finops-auth.db").strip() or "sqlite:///./finops-auth.db"
     if value.startswith("postgres://"):
         value = "postgresql+psycopg2://" + value[len("postgres://"):]
     elif value.startswith("postgresql://"):
         value = "postgresql+psycopg2://" + value[len("postgresql://"):]
+    if value.startswith("postgresql+"):
+        parsed = make_url(value)
+        unsupported_params = {"pgbouncer", "connection_limit"}
+        if unsupported_params.intersection(parsed.query):
+            cleaned_query = {k: v for k, v in parsed.query.items() if k not in unsupported_params}
+            value = parsed.set(query=cleaned_query).render_as_string(hide_password=False)
     return value
 
 
