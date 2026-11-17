@@ -9,7 +9,7 @@ def is_hosted_deployment() -> bool:
     """True when running on Render or explicit hosted flag."""
     if os.getenv("DEPLOYMENT_ENV", "").lower() in {"production", "hosted"}:
         return True
-    return os.getenv("RENDER") == "true"
+    return os.getenv("RENDER") == "true" or bool(os.getenv("RAILWAY_ENVIRONMENT"))
 
 
 def aws_scan_enabled() -> bool:
@@ -32,6 +32,8 @@ def cors_allow_origins() -> list[str]:
         "http://127.0.0.1:5173",
         "http://localhost:4173",
         "http://127.0.0.1:4173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
     ]
 
 
