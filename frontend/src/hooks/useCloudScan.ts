@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { fetchScanStatus, startCloudScan } from "@/api/scan";
+import { fetchScanStatus, startCloudScan, type StartScanOptions } from "@/api/scan";
 import type { ScanMode } from "@/api/types";
+import { useAuth } from "@/auth/AuthContext";
 import { useToast } from "@/components/ui/toast";
 import { queryKeys } from "@/hooks/queryKeys";
+import { loadNotificationPreferences } from "@/lib/preferences";
 
 const REFRESH_KEYS = [
   queryKeys.resources,
@@ -24,6 +26,7 @@ const REFRESH_KEYS = [
 export function useCloudScan() {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { user } = useAuth();
   const previousStatusRef = useRef<string | undefined>(undefined);
 
   const statusQuery = useQuery({
@@ -37,8 +40,9 @@ export function useCloudScan() {
   const isScanning = status === "running";
 
   const startMutation = useMutation({
-    mutationFn: (mode: ScanMode) => startCloudScan(mode),
-    onSuccess: (_data, mode) => {
+    mutationFn: (options: ScanMode | StartScanOptions) => startCloudScan(options),
+    onSuccess: (_data, options) => {
+      const mode = typeof options === "string" ? options : (options.mode ?? "synthetic");
       const label = mode === "aws" ? "Live AWS scan started" : "Synthetic scan started";
       toast.info("Scan Started", `${label} — running FinOps pipeline…`);
       void queryClient.invalidateQueries({ queryKey: queryKeys.scanStatus });
@@ -58,15 +62,20 @@ export function useCloudScan() {
 
     if (previousStatus !== "running") return;
 
+    const prefs = loadNotificationPreferences(user?.id);
     if (status === "completed") {
-      toast.success("Scan Completed", "Dashboard data refreshed from latest pipeline run.");
+      if (prefs.scanCompleted) {
+        toast.success("Scan Completed", "Dashboard data refreshed from latest pipeline run.");
+      }
       void Promise.all(
         REFRESH_KEYS.map((key) => queryClient.invalidateQueries({ queryKey: key }))
       );
     } else if (status === "failed") {
-      toast.error("Scan Failed", statusQuery.data?.error ?? "Pipeline execution failed.");
+      if (prefs.scanFailed) {
+        toast.error("Scan Failed", statusQuery.data?.error ?? "Pipeline execution failed.");
+      }
     }
-  }, [status, statusQuery.data?.error, queryClient, toast]);
+  }, [status, statusQuery.data?.error, queryClient, toast, user?.id]);
 
   useEffect(() => {
     if (!statusQuery.isError) return;
@@ -76,13 +85,19 @@ export function useCloudScan() {
     );
   }, [statusQuery.isError, statusQuery.error, toast]);
 
+  const activeRequestedMode =
+    typeof startMutation.variables === "string"
+      ? startMutation.variables
+      : startMutation.variables?.mode ?? null;
+
   return {
-    startScan: (mode: ScanMode = "synthetic") => startMutation.mutate(mode),
+    startScan: (options: ScanMode | StartScanOptions = "synthetic") =>
+      startMutation.mutate(options),
     isScanning: isScanning || startMutation.isPending,
     progress: statusQuery.data?.progress ?? (startMutation.isPending ? 5 : 0),
     currentStep: statusQuery.data?.current_step,
     scanStatus: status,
-    scanMode: statusQuery.data?.scan_mode ?? startMutation.variables ?? null,
+    scanMode: statusQuery.data?.scan_mode ?? activeRequestedMode,
     isStarting: startMutation.isPending,
   };
 }

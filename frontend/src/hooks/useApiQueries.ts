@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchAnomalies } from "@/api/anomalies";
 import { fetchAudit, fetchExecutiveReport } from "@/api/audit";
+import { fetchAwsAccounts } from "@/api/awsAccounts";
 import { enrichResources } from "@/api/enrich";
 import { fetchExecutions } from "@/api/executions";
 import { fetchForecast } from "@/api/forecast";
@@ -27,6 +28,14 @@ export function useScanSource() {
   return useQuery({
     queryKey: queryKeys.scanSource,
     queryFn: fetchScanSource,
+    staleTime: 30_000,
+  });
+}
+
+export function useAwsAccounts() {
+  return useQuery({
+    queryKey: queryKeys.awsAccounts,
+    queryFn: fetchAwsAccounts,
     staleTime: 30_000,
   });
 }

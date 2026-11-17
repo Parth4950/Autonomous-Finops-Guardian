@@ -104,7 +104,7 @@ export default function OverviewPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && !metrics}
         loadingMessage="Loading dashboard metrics..."
-        emptyMessage="No overview data available from the API."
+        emptyMessage="No completed scan results for this account yet. Click Run Cloud Scan above to analyze your environment."
         skeleton={<SkeletonKpiGrid count={6} columns={4} />}
       >
         {metrics && (

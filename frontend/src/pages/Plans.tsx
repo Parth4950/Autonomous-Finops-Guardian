@@ -76,7 +76,7 @@ export default function PlansPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && enriched.length === 0}
         loadingMessage="Loading remediation plans..."
-        emptyMessage="No remediation plans found. Run agents/planner/planner.py first."
+        emptyMessage="No remediation plans for this account yet. Run a cloud scan from Overview to generate remediation recommendations."
       >
         <>
           <PlansKpiCards

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import OverviewPage from "@/pages/Overview";
 import ResourcesPage from "@/pages/Resources";
@@ -9,11 +9,24 @@ import AuditPage from "@/pages/Audit";
 import PlansPage from "@/pages/Plans";
 import ApprovalsPage from "@/pages/Approvals";
 import ExecutionsPage from "@/pages/Executions";
+import SettingsPage from "@/pages/Settings";
+import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import { AuthProvider, useAuth } from "@/auth/AuthContext";
 
-export const router = createBrowserRouter([
+function ProtectedApp() {
+  const {user,loading}=useAuth(); const location=useLocation();
+  if (loading) return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Restoring session…</div>;
+  if (!user) return <Navigate to="/login" replace state={{from:location}}/>;
+  return <AppLayout/>;
+}
+
+const routes = [
+  {path:"/login",element:<LoginPage/>},
+  {path:"/register",element:<RegisterPage/>},
   {
     path: "/",
-    element: <AppLayout />,
+    element: <ProtectedApp />,
     children: [
       { index: true, element: <OverviewPage /> },
       { path: "resources", element: <ResourcesPage /> },
@@ -24,6 +37,11 @@ export const router = createBrowserRouter([
       { path: "plans", element: <PlansPage /> },
       { path: "approvals", element: <ApprovalsPage /> },
       { path: "executions", element: <ExecutionsPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
-]);
+];
+
+export const router = createBrowserRouter(routes);
+
+export function AppRoutes() { return <AuthProvider><RouterProvider router={router}/></AuthProvider>; }

@@ -104,7 +104,7 @@ export default function ExecutionsPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && normalized.length === 0}
         loadingMessage="Loading execution history..."
-        emptyMessage="No executions recorded yet. Approve plans and run agents/executor/executor.py."
+        emptyMessage="No executions recorded for this account yet. Approve remediation plans in Approval Center to execute them."
       >
         <>
           <ExecutionKpiCards

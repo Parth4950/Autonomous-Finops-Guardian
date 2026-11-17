@@ -33,7 +33,7 @@ export default function RiskPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && data.length === 0}
         loadingMessage="Loading risk assessments..."
-        emptyMessage="No risk assessment records found."
+        emptyMessage="No risk assessments for this account yet. Run a cloud scan from Overview to evaluate operational risk."
       >
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

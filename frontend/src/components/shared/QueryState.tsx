@@ -126,6 +126,11 @@ interface QueryStateProps {
   skeleton?: React.ReactNode;
 }
 
+export function isNoScanDataError(error?: Error | null): boolean {
+  if (!error?.message) return false;
+  return /no completed scan results|not available for this scan/i.test(error.message);
+}
+
 export function QueryState({
   isLoading,
   isError,
@@ -146,6 +151,17 @@ export function QueryState({
         className={className}
         variant={loadingVariant}
         skeleton={skeleton}
+      />
+    );
+  }
+  if (isError && isNoScanDataError(error)) {
+    return (
+      <EmptyState
+        message={
+          emptyMessage ??
+          "No completed scan results are available for this account yet. Run a cloud scan from Overview to populate your dashboard."
+        }
+        className={className}
       />
     );
   }

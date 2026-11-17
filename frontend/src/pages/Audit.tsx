@@ -80,7 +80,7 @@ export default function AuditPage() {
         onRetry={() => void refetch()}
         isEmpty={!isPageLoading && data.length === 0}
         loadingMessage="Loading audit reports..."
-        emptyMessage="No audit records found. Run agents/auditor/auditor.py first."
+        emptyMessage="No financial audit records for this account yet. Run a cloud scan from Overview to generate audit reports."
       >
         <div ref={printRef} className="audit-print-root space-y-6">
           <AuditToolbar

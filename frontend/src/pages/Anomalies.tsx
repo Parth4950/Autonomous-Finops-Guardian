@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { AlertTriangle } from "lucide-react";
+import { useAuth } from "@/auth/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnomalyScoreHistogram } from "@/components/anomalies/AnomalyScoreHistogram";
 import { ResourceScatterPlot } from "@/components/anomalies/ResourceScatterPlot";
@@ -7,8 +9,11 @@ import { MetricCard, PageHeader } from "@/components/shared/PageHeader";
 import { QueryState } from "@/components/shared/QueryState";
 import { SkeletonKpiGrid, SkeletonTable } from "@/components/shared/Skeletons";
 import { useAnomalies } from "@/hooks/useApiQueries";
+import { useNotificationPreferences } from "@/lib/preferences";
 
 export default function AnomaliesPage() {
+  const { user } = useAuth();
+  const { preferences } = useNotificationPreferences(user?.id);
   const { data, isLoading, isError, error, refetch } = useAnomalies();
 
   const lowestScore = useMemo(() => {
@@ -30,7 +35,7 @@ export default function AnomaliesPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && !data}
         loadingMessage="Loading anomaly detection results..."
-        emptyMessage="No anomaly data found. Run ml/isolation_forest/isolation_detector.py first."
+        emptyMessage="No anomaly detection results for this account yet. Run a cloud scan from Overview to score resources."
         skeleton={
           <>
             <SkeletonKpiGrid count={4} />
@@ -40,6 +45,16 @@ export default function AnomaliesPage() {
       >
         {data && (
           <>
+            {preferences.anomalyAlerts && data.stats.anomalies > 0 && (
+              <div className="flex items-center gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-600 dark:text-amber-300">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>
+                  <strong>Anomaly Alert:</strong> {data.stats.anomalies} resource(s) flagged by
+                  Isolation Forest with strongest anomaly score {lowestScore} (
+                  {data.suspicious[0]?.resource_id ?? "unknown"}).
+                </span>
+              </div>
+            )}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <MetricCard
                 label="Resources Scored"
