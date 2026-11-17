@@ -38,6 +38,7 @@ from backend.api import (
     waste,
 )
 from backend.config import cors_allow_origins
+from backend.db.session import ensure_database_migrated, get_db
 from backend.services.data_loader import DataNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,8 @@ async def lifespan(app: FastAPI):
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     logger.info("Autonomous FinOps Guardian API starting")
+    if get_db not in app.dependency_overrides:
+        ensure_database_migrated()
     yield
     logger.info("Autonomous FinOps Guardian API shutting down")
 
@@ -76,7 +79,7 @@ app.add_middleware(
     allow_origins=cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "X-CSRF-Token"],
+    allow_headers=["Content-Type", "X-CSRF-Token", "X-FinOps-Mode"],
 )
 
 app.include_router(auth.router)
