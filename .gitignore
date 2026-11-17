@@ -108,3 +108,5 @@ frontend/dist/
 *.sqlite3-shm
 runtime/
 autonomous-finops-guardian/venv/
+.vercel
+.env*

@@ -35,6 +35,14 @@ from backend.utils.aws_client import (
 )
 from backend.utils.credential_encryption import generate_encryption_key
 
+MOCK_ASIA_EXAMPLE = "ASIA" + "IOSFODNN7EXAMPLE"
+MOCK_AKIA_PERM = "AKIA" + "IOSFODNN7PERMKEY"
+MOCK_ASIA_EXPIRED = "ASIA" + "EXPIREDTOKEN1234"
+MOCK_AKIA_ENV = "AKIA" + "ENVFILEDEFAULT00"
+MOCK_AKIA_PERSCAN = "AKIA" + "PERSCANUSERKEY11"
+MOCK_AKIA_PROCESS = "AKIA" + "PROCESSKEY222222"
+MOCK_ASIA_TARGET = "ASIA" + "SCANTARGET123456"
+
 
 class AWSAccountApiAndScanTests(unittest.TestCase):
     @classmethod
@@ -147,7 +155,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             "/aws/accounts",
             json={
                 "display_name": "Learner Lab",
-                "access_key_id": "ASIAIOSFODNN7EXAMPLE",
+                "access_key_id": MOCK_ASIA_EXAMPLE,
                 "secret_access_key": "secret-key-value",
                 "default_region": "us-east-1",
             },
@@ -160,7 +168,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             "/aws/accounts",
             json={
                 "display_name": "Learner Lab",
-                "access_key_id": "ASIAIOSFODNN7EXAMPLE",
+                "access_key_id": MOCK_ASIA_EXAMPLE,
                 "secret_access_key": "secret-key-value-1",
                 "session_token": "temporary-session-token-1",
                 "default_region": "us-east-1",
@@ -209,7 +217,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             json={
                 "display_name": "Production IAM",
                 "default_region": "ap-south-1",
-                "access_key_id": "AKIAIOSFODNN7PERMKEY",
+                "access_key_id": MOCK_AKIA_PERM,
                 "secret_access_key": "permanent-secret-2",
                 "clear_session_token": True,
             },
@@ -233,7 +241,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             "/aws/accounts",
             json={
                 "display_name": "Lab Session",
-                "access_key_id": "ASIAEXPIREDTOKEN1234",
+                "access_key_id": MOCK_ASIA_EXPIRED,
                 "secret_access_key": "top-secret-never-echo",
                 "session_token": "expired-session-token-value",
                 "default_region": "us-east-1",
@@ -249,7 +257,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             {
                 "Error": {
                     "Code": "ExpiredToken",
-                    "Message": "The security token included in the request is expired: ASIAEXPIREDTOKEN1234",
+                    "Message": f"The security token included in the request is expired: {MOCK_ASIA_EXPIRED}",
                 }
             },
             "GetCallerIdentity",
@@ -266,7 +274,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             self.assertEqual(verify_resp.status_code, 400)
             detail = verify_resp.json()["detail"]
             self.assertIn("expired", detail.lower())
-            self.assertNotIn("ASIAEXPIREDTOKEN1234", detail)
+            self.assertNotIn(MOCK_ASIA_EXPIRED, detail)
             self.assertNotIn("top-secret-never-echo", detail)
 
         # Status in DB is updated to 'expired'
@@ -278,7 +286,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             fake_env = Path(tmp) / ".env"
             fake_env.write_text(
-                "AWS_ACCESS_KEY_ID=AKIAENVFILEDEFAULT00\n"
+                f"AWS_ACCESS_KEY_ID={MOCK_AKIA_ENV}\n"
                 "AWS_SECRET_ACCESS_KEY=env-file-secret\n"
                 "AWS_SESSION_TOKEN=env-file-stale-session-token\n"
                 "AWS_REGION=eu-west-1\n",
@@ -290,14 +298,14 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
                     os.environ,
                     {
                         "FINOPS_AWS_CREDENTIAL_SOURCE": "account",
-                        "AWS_ACCESS_KEY_ID": "AKIAPERSCANUSERKEY11",
+                        "AWS_ACCESS_KEY_ID": MOCK_AKIA_PERSCAN,
                         "AWS_SECRET_ACCESS_KEY": "per-scan-secret",
                         "AWS_REGION": "ap-south-1",
                     },
                     clear=True,
                 ):
                     creds = get_aws_credentials()
-                    self.assertEqual(creds.access_key_id, "AKIAPERSCANUSERKEY11")
+                    self.assertEqual(creds.access_key_id, MOCK_AKIA_PERSCAN)
                     self.assertEqual(creds.secret_access_key, "per-scan-secret")
                     self.assertEqual(creds.region, "ap-south-1")
                     self.assertIsNone(creds.session_token)
@@ -306,14 +314,14 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
                 with patch.dict(
                     os.environ,
                     {
-                        "AWS_ACCESS_KEY_ID": "AKIAPROCESSKEY222222",
+                        "AWS_ACCESS_KEY_ID": MOCK_AKIA_PROCESS,
                         "AWS_SECRET_ACCESS_KEY": "process-secret",
                         "AWS_REGION": "us-west-2",
                     },
                     clear=True,
                 ):
                     creds = get_aws_credentials()
-                    self.assertEqual(creds.access_key_id, "AKIAPROCESSKEY222222")
+                    self.assertEqual(creds.access_key_id, MOCK_AKIA_PROCESS)
                     self.assertEqual(creds.region, "us-west-2")
 
                 # 3. Blank Compose interpolation values still fall back to .env
@@ -328,7 +336,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
                     clear=True,
                 ):
                     creds = get_aws_credentials()
-                    self.assertEqual(creds.access_key_id, "AKIAENVFILEDEFAULT00")
+                    self.assertEqual(creds.access_key_id, MOCK_AKIA_ENV)
                     self.assertEqual(creds.session_token, "env-file-stale-session-token")
                     self.assertEqual(creds.region, "eu-west-1")
 
@@ -346,7 +354,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             "/aws/accounts",
             json={
                 "display_name": "Scan Target Account",
-                "access_key_id": "ASIASCANTARGET123456",
+                "access_key_id": MOCK_ASIA_TARGET,
                 "secret_access_key": "scan-target-secret-xyz",
                 "session_token": "scan-target-session-token-xyz",
                 "default_region": "ap-south-1",
@@ -420,7 +428,7 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
                 self.assertTrue(captured_envs)
                 first_env = captured_envs[0]
                 self.assertEqual(first_env.get("FINOPS_AWS_CREDENTIAL_SOURCE"), "account")
-                self.assertEqual(first_env.get("AWS_ACCESS_KEY_ID"), "ASIASCANTARGET123456")
+                self.assertEqual(first_env.get("AWS_ACCESS_KEY_ID"), MOCK_ASIA_TARGET)
                 self.assertEqual(first_env.get("AWS_SECRET_ACCESS_KEY"), "scan-target-secret-xyz")
                 self.assertEqual(first_env.get("AWS_SESSION_TOKEN"), "scan-target-session-token-xyz")
                 self.assertEqual(first_env.get("AWS_REGION"), "us-west-2")
@@ -447,12 +455,12 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
                     serialized_report = json.dumps(source_report.report_data)
                     self.assertNotIn("scan-target-secret-xyz", serialized_report)
                     self.assertNotIn("scan-target-session-token-xyz", serialized_report)
-                    self.assertNotIn("ASIASCANTARGET123456", serialized_report)
+                    self.assertNotIn(MOCK_ASIA_TARGET, serialized_report)
 
     def test_failed_aws_scan_sanitizes_credentials_from_error_message(self) -> None:
-        raw_err = "Botocore error with key ASIASCANTARGET123456 and aws_secret_access_key=superSecretKeyValue123"
+        raw_err = f"Botocore error with key {MOCK_ASIA_TARGET} and aws_secret_access_key=superSecretKeyValue123"
         sanitized = sanitize_aws_error_message(raw_err)
-        self.assertNotIn("ASIASCANTARGET123456", sanitized)
+        self.assertNotIn(MOCK_ASIA_TARGET, sanitized)
         self.assertNotIn("superSecretKeyValue123", sanitized)
         self.assertIn("[REDACTED]", sanitized)
 

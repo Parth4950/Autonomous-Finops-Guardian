@@ -9,7 +9,7 @@ class AWSAccountCreateRequest(BaseModel):
     """Payload to connect a user-owned AWS account."""
 
     display_name: str = Field(min_length=1, max_length=120, examples=["Learner Lab Sandbox"])
-    access_key_id: str = Field(min_length=8, max_length=128, examples=["ASIAIOSFODNN7EXAMPLE"])
+    access_key_id: str = Field(min_length=8, max_length=128, examples=["ASIA...EXAMPLE"])
     secret_access_key: str = Field(min_length=1, max_length=256)
     session_token: str | None = Field(default=None, max_length=4096)
     default_region: str = Field(default="ap-south-1", min_length=2, max_length=64, examples=["us-east-1"])

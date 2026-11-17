@@ -8,11 +8,13 @@ from unittest.mock import patch
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, event, inspect
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.db.base import Base
+from backend.db.migrations import REQUIRED_TABLES, run_database_migrations
+from backend.db.session import ensure_database_migrated, get_engine
 from backend.models.auth import User
 from backend.models.finops import Resource, Scan, ScanResourceSnapshot
 
@@ -116,6 +118,67 @@ class MultiUserSchemaTests(unittest.TestCase):
                     self.assertTrue(PHASE2_TABLES.issubset(inspect(engine).get_table_names()))
                 finally:
                     engine.dispose()
+
+    def test_startup_migration_runner_creates_tables_preserves_data_and_recovers_missing_users_table(self):
+        with TemporaryDirectory(dir=ROOT) as temp_dir:
+            db_path = Path(temp_dir) / "startup-migrate.sqlite3"
+            engine = create_engine(f"sqlite:///{db_path.as_posix()}")
+            try:
+                rev = run_database_migrations(engine)
+                self.assertEqual(rev, "0003_user_aws_accounts")
+                tables = set(inspect(engine).get_table_names())
+                self.assertTrue(set(REQUIRED_TABLES).issubset(tables))
+
+                # Insert a user and re-run migrations to verify existing data is preserved
+                with Session(engine) as session:
+                    session.add(
+                        User(
+                            full_name="Preserved User",
+                            username="preserved.user",
+                            email="preserved@example.test",
+                            password_hash="hash",
+                        )
+                    )
+                    session.commit()
+
+                rev_again = run_database_migrations(engine)
+                self.assertEqual(rev_again, "0003_user_aws_accounts")
+                with Session(engine) as session:
+                    count = session.query(User).filter(User.username == "preserved.user").count()
+                    self.assertEqual(count, 1)
+            finally:
+                engine.dispose()
+
+            # Simulate a database where alembic_version was stamped but 'users' table is missing
+            broken_db_path = Path(temp_dir) / "broken-stamp.sqlite3"
+            broken_engine = create_engine(f"sqlite:///{broken_db_path.as_posix()}")
+            try:
+                with broken_engine.connect() as conn:
+                    conn.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)"))
+                    conn.execute(text("INSERT INTO alembic_version (version_num) VALUES ('0003_user_aws_accounts')"))
+                    conn.commit()
+
+                recovered_rev = run_database_migrations(broken_engine)
+                self.assertEqual(recovered_rev, "0003_user_aws_accounts")
+                recovered_tables = set(inspect(broken_engine).get_table_names())
+                self.assertTrue(set(REQUIRED_TABLES).issubset(recovered_tables))
+            finally:
+                broken_engine.dispose()
+
+            # Verify ensure_database_migrated() migrates the configured DATABASE_URL automatically
+            fresh_url_path = Path(temp_dir) / "fresh-env-url.sqlite3"
+            fresh_url = f"sqlite:///{fresh_url_path.as_posix()}"
+            get_engine.cache_clear()
+            try:
+                with patch.dict(os.environ, {"DATABASE_URL": fresh_url}):
+                    ensure_database_migrated()
+                    runtime_engine = get_engine()
+                    self.assertTrue(set(REQUIRED_TABLES).issubset(inspect(runtime_engine).get_table_names()))
+            finally:
+                get_engine().dispose()
+                get_engine.cache_clear()
+
+
 
 
 if __name__ == "__main__":
