@@ -14,13 +14,29 @@ from pathlib import Path
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 # Ensure project root is importable for agent and workflow packages.
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from backend.api import anomalies, approvals, audit, execution, forecast, health, planner, resources, risk, scan, waste
+from backend.api import (
+    anomalies,
+    approvals,
+    audit,
+    auth,
+    aws_accounts,
+    execution,
+    forecast,
+    health,
+    planner,
+    resources,
+    risk,
+    scan,
+    waste,
+)
 from backend.config import cors_allow_origins
 from backend.services.data_loader import DataNotFoundError
 
@@ -52,15 +68,19 @@ app = FastAPI(
     openapi_url="/openapi.json",
     lifespan=lifespan,
 )
+app.state.limiter = auth.limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_allow_origins(),
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-CSRF-Token"],
 )
 
+app.include_router(auth.router)
+app.include_router(aws_accounts.router)
 app.include_router(health.router)
 app.include_router(scan.router)
 app.include_router(resources.router)
