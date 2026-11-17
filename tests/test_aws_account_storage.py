@@ -84,10 +84,16 @@ class AWSAccountStorageTests(unittest.TestCase):
             version, nonce_b64, payload_b64 = ciphertext.split(".")
 
             # Tamper with ciphertext/GCM tag
-            flipped_char = "A" if payload_b64[-2] != "A" else "B"
-            tampered_payload = f"{version}.{nonce_b64}.{payload_b64[:-2]}{flipped_char}{payload_b64[-1]}"
+            flipped_char = "A" if payload_b64[0] != "A" else "B"
+            tampered_payload = f"{version}.{nonce_b64}.{flipped_char}{payload_b64[1:]}"
             with self.assertRaises(CredentialTamperError):
                 decrypt_aws_credentials(tampered_payload, user_id=7)
+
+            # Tamper with trailing base64 character before '=' padding
+            flipped_tail = "A" if payload_b64[-2] != "A" else "B"
+            tampered_tail = f"{version}.{nonce_b64}.{payload_b64[:-2]}{flipped_tail}{payload_b64[-1]}"
+            with self.assertRaises(CredentialTamperError):
+                decrypt_aws_credentials(tampered_tail, user_id=7)
 
             # Tamper with nonce
             flipped_nonce = "A" if nonce_b64[0] != "A" else "B"
