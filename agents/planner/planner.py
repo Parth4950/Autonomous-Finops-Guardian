@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -28,17 +30,18 @@ from agents.planner.gemini_planner import (
     PlanningJustification,
     RemediationAction,
 )
+from backend.models.paths import workspace_path
 
 logger = logging.getLogger(__name__)
 
 MODULE_DIR = Path(__file__).resolve().parent
-DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
-DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
+DEFAULT_RESULTS_DIR = workspace_path(MODULE_DIR / "results")
+DEFAULT_FIGURES_DIR = workspace_path(MODULE_DIR / "figures")
 DEFAULT_OUTPUT_PATH = DEFAULT_RESULTS_DIR / "remediation_plan.csv"
 DEFAULT_APPROVAL_PATH = DEFAULT_RESULTS_DIR / "approval_packages.json"
 
-DEFAULT_AUDIT_PATH = _PROJECT_ROOT / "agents" / "auditor" / "results" / "audit_results.csv"
-DEFAULT_RISK_PATH = _PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv"
+DEFAULT_AUDIT_PATH = workspace_path(_PROJECT_ROOT / "agents" / "auditor" / "results" / "audit_results.csv")
+DEFAULT_RISK_PATH = workspace_path(_PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv")
 
 TOP_N_PLANS = 20
 
@@ -142,12 +145,12 @@ class Planner:
         Supports AWS types (ebs, ec2) and synthetic categories
         (healthy, zombie, seasonal).
         """
-        lowered_id = resource_id.lower()
-        lowered_type = resource_type.lower()
+        lowered_id = str(resource_id).strip().lower()
+        lowered_type = str(resource_type).strip().lower()
 
-        if lowered_type == "ebs" or "ebs" in lowered_id:
+        if lowered_type in ("ebs", "ebs_volume") or lowered_id.startswith("vol-") or "ebs" in lowered_id:
             return "ebs"
-        if lowered_type in ("ec2", "instance", "compute"):
+        if lowered_type in ("ec2", "ec2_instance", "instance", "compute") or lowered_id.startswith("i-"):
             return "ec2"
         return lowered_type
 
@@ -335,8 +338,8 @@ class PlannerReporter:
 class PlannerVisualizer:
     """Generate remediation planning visualizations."""
 
-    def __init__(self, figures_dir: Path = DEFAULT_FIGURES_DIR) -> None:
-        self._figures_dir = figures_dir
+    def __init__(self, figures_dir: Path | None = None) -> None:
+        self._figures_dir = figures_dir or workspace_path(MODULE_DIR / "figures")
 
     def generate_all(self, results: pd.DataFrame) -> list[Path]:
         """Create and save all planner visualizations."""
@@ -497,18 +500,18 @@ class PlannerPipeline:
 
     def __init__(
         self,
-        audit_path: Path = DEFAULT_AUDIT_PATH,
-        risk_path: Path = DEFAULT_RISK_PATH,
-        output_path: Path = DEFAULT_OUTPUT_PATH,
-        approval_path: Path = DEFAULT_APPROVAL_PATH,
+        audit_path: Path | None = None,
+        risk_path: Path | None = None,
+        output_path: Path | None = None,
+        approval_path: Path | None = None,
         planner: Planner | None = None,
         gemini_planner: GeminiPlanner | None = None,
         visualizer: PlannerVisualizer | None = None,
     ) -> None:
-        self._audit_path = audit_path
-        self._risk_path = risk_path
-        self._output_path = output_path
-        self._approval_path = approval_path
+        self._audit_path = audit_path or workspace_path(_PROJECT_ROOT / "agents" / "auditor" / "results" / "audit_results.csv")
+        self._risk_path = risk_path or workspace_path(_PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv")
+        self._output_path = output_path or workspace_path(MODULE_DIR / "results" / "remediation_plan.csv")
+        self._approval_path = approval_path or workspace_path(MODULE_DIR / "results" / "approval_packages.json")
         self._planner = planner or Planner()
         self._gemini_planner = gemini_planner or GeminiPlanner()
         self._visualizer = visualizer or PlannerVisualizer()

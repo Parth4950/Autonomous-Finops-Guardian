@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -23,16 +25,17 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from agents.auditor.gemini_reporter import ExecutiveReport, GeminiReporter
+from backend.models.paths import workspace_path
 
 logger = logging.getLogger(__name__)
 
 MODULE_DIR = Path(__file__).resolve().parent
-DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
-DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
+DEFAULT_RESULTS_DIR = workspace_path(MODULE_DIR / "results")
+DEFAULT_FIGURES_DIR = workspace_path(MODULE_DIR / "figures")
 DEFAULT_OUTPUT_PATH = DEFAULT_RESULTS_DIR / "audit_results.csv"
 DEFAULT_REPORT_PATH = DEFAULT_RESULTS_DIR / "executive_report.json"
 DEFAULT_RISK_ASSESSMENT_PATH = (
-    _PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv"
+    workspace_path(_PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv")
 )
 
 TOP_N_OPPORTUNITIES = 20
@@ -85,8 +88,13 @@ class Auditor:
 
     @staticmethod
     def parse_resource_type(resource_id: str) -> str:
-        """Extract resource category from resource ID (e.g. res-zombie-001 → zombie)."""
-        parts = resource_id.split("-")
+        """Extract resource category from resource ID (e.g. res-zombie-001 → zombie, vol-123 → ebs, i-123 → ec2)."""
+        lowered = str(resource_id).strip().lower()
+        if lowered.startswith("vol-"):
+            return "ebs"
+        if lowered.startswith("i-"):
+            return "ec2"
+        parts = str(resource_id).split("-")
         return parts[1] if len(parts) >= 2 else "unknown"
 
     @staticmethod
@@ -285,8 +293,8 @@ class AuditReporter:
 class AuditVisualizer:
     """Generate financial audit visualizations."""
 
-    def __init__(self, figures_dir: Path = DEFAULT_FIGURES_DIR) -> None:
-        self._figures_dir = figures_dir
+    def __init__(self, figures_dir: Path | None = None) -> None:
+        self._figures_dir = figures_dir or workspace_path(MODULE_DIR / "figures")
 
     def generate_all(self, results: pd.DataFrame) -> list[Path]:
         """Create and save all audit visualizations."""
@@ -450,16 +458,18 @@ class AuditorPipeline:
 
     def __init__(
         self,
-        risk_assessment_path: Path = DEFAULT_RISK_ASSESSMENT_PATH,
-        output_path: Path = DEFAULT_OUTPUT_PATH,
-        report_path: Path = DEFAULT_REPORT_PATH,
+        risk_assessment_path: Path | None = None,
+        output_path: Path | None = None,
+        report_path: Path | None = None,
         auditor: Auditor | None = None,
         reporter: GeminiReporter | None = None,
         visualizer: AuditVisualizer | None = None,
     ) -> None:
-        self._risk_path = risk_assessment_path
-        self._output_path = output_path
-        self._report_path = report_path
+        self._risk_path = risk_assessment_path or workspace_path(
+            _PROJECT_ROOT / "agents" / "risk_assessor" / "results" / "risk_assessment.csv"
+        )
+        self._output_path = output_path or workspace_path(MODULE_DIR / "results" / "audit_results.csv")
+        self._report_path = report_path or workspace_path(MODULE_DIR / "results" / "executive_report.json")
         self._auditor = auditor or Auditor()
         self._gemini_reporter = reporter or GeminiReporter()
         self._visualizer = visualizer or AuditVisualizer()
