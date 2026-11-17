@@ -28,7 +28,7 @@ export default function ForecastingPage() {
         onRetry={() => void refetch()}
         isEmpty={!isLoading && !data}
         loadingMessage="Loading forecast data..."
-        emptyMessage="No forecast data found. Run ml/forecasting/export_forecast_json.py first."
+        emptyMessage="No utilization forecasts for this account yet. Run a cloud scan from Overview to generate Prophet forecasts."
         skeleton={
           <>
             <SkeletonKpiGrid count={4} />

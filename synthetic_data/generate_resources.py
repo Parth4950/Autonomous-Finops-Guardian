@@ -18,6 +18,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from backend.models.paths import workspace_path
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(message)s",
@@ -25,7 +31,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-SYNTHETIC_DATA_DIR = Path(__file__).resolve().parent
+SYNTHETIC_DATA_DIR = workspace_path(Path(__file__).resolve().parent)
 DEFAULT_OUTPUT_CSV = SYNTHETIC_DATA_DIR / "cloud_resources.csv"
 DEFAULT_FIGURES_DIR = SYNTHETIC_DATA_DIR / "figures"
 DEFAULT_SCAN_SOURCE_JSON = SYNTHETIC_DATA_DIR / "scan_source.json"

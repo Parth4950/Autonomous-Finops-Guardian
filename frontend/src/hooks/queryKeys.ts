@@ -14,4 +14,5 @@ export const queryKeys = {
   overview: ["overview"] as const,
   scanStatus: ["scan", "status"] as const,
   scanSource: ["scan", "source"] as const,
+  awsAccounts: ["aws", "accounts"] as const,
 };

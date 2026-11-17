@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -28,15 +30,16 @@ from agents.risk_assessor.gemini_explainer import (
     GeminiExplainer,
     RiskExplanationContext,
 )
+from backend.models.paths import workspace_path
 
 logger = logging.getLogger(__name__)
 
 MODULE_DIR = Path(__file__).resolve().parent
-DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
-DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
+DEFAULT_RESULTS_DIR = workspace_path(MODULE_DIR / "results")
+DEFAULT_FIGURES_DIR = workspace_path(MODULE_DIR / "figures")
 DEFAULT_OUTPUT_PATH = DEFAULT_RESULTS_DIR / "risk_assessment.csv"
 
-DEFAULT_FORECAST_PATH = _PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_results.csv"
+DEFAULT_FORECAST_PATH = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_results.csv")
 
 RANDOM_SEED = 42
 TOP_N_CANDIDATES = 20
@@ -219,7 +222,7 @@ class WasteScoreEngine:
             if not is_aws_scan_mode():
                 return {}
 
-            inventory_path = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
+            inventory_path = workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
             if not inventory_path.exists():
                 return {}
 
@@ -457,8 +460,8 @@ class RiskAssessmentReporter:
 class RiskAssessmentVisualizer:
     """Generate matplotlib visualizations for risk assessment analytics."""
 
-    def __init__(self, figures_dir: Path = DEFAULT_FIGURES_DIR) -> None:
-        self._figures_dir = figures_dir
+    def __init__(self, figures_dir: Path | None = None) -> None:
+        self._figures_dir = figures_dir or workspace_path(MODULE_DIR / "figures")
 
     def generate_all(self, results: pd.DataFrame) -> list[Path]:
         """Create and save all required visualizations."""
@@ -620,15 +623,15 @@ class RiskAssessmentPipeline:
 
     def __init__(
         self,
-        forecast_path: Path = DEFAULT_FORECAST_PATH,
-        output_path: Path = DEFAULT_OUTPUT_PATH,
+        forecast_path: Path | None = None,
+        output_path: Path | None = None,
         metadata_generator: InfrastructureMetadataGenerator | None = None,
         risk_assessor: RiskAssessor | None = None,
         explainer: GeminiExplainer | None = None,
         visualizer: RiskAssessmentVisualizer | None = None,
     ) -> None:
-        self._forecast_path = forecast_path
-        self._output_path = output_path
+        self._forecast_path = forecast_path or workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_results.csv")
+        self._output_path = output_path or workspace_path(MODULE_DIR / "results" / "risk_assessment.csv")
         self._metadata_generator = metadata_generator or InfrastructureMetadataGenerator()
         self._risk_assessor = risk_assessor or RiskAssessor()
         self._explainer = explainer or GeminiExplainer()
@@ -767,7 +770,7 @@ class RiskAssessmentPipeline:
         except Exception:
             return forecast_df
 
-        inventory_path = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
+        inventory_path = workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
         if not inventory_path.exists():
             return forecast_df
 
@@ -792,6 +795,7 @@ class RiskAssessmentPipeline:
             stubs.append(
                 {
                     "resource_id": row["resource_id"],
+                    "resource_type": "heuristic_fallback",
                     "historical_avg_cpu": avg_cpu,
                     "forecast_avg_cpu": avg_cpu,
                     "forecast_min_cpu": avg_cpu,

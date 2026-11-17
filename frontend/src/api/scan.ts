@@ -1,36 +1,32 @@
-import axios from "axios";
-import { API_BASE_URL } from "@/api/client";
+import { apiClient } from "@/api/client";
 import { validateObjectResponse } from "@/api/validate";
-import type { ScanMode, ScanStartRequest, ScanStartResponse, ScanStatusResponse } from "@/api/types";
+import type {
+  ScanMode,
+  ScanStartRequest,
+  ScanStartResponse,
+  ScanStatusResponse,
+} from "@/api/types";
 
-/** Scan polling can outlast default API timeouts while the pipeline runs. */
-const scanClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-  timeout: 120_000,
-});
+export interface StartScanOptions {
+  mode?: ScanMode;
+  aws_account_id?: number | null;
+  region?: string | null;
+}
 
-scanClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (axios.isAxiosError(error)) {
-      const detail =
-        typeof error.response?.data?.detail === "string"
-          ? error.response.data.detail
-          : error.code === "ECONNABORTED"
-            ? "Scan request timed out — the pipeline may still be running on the server."
-            : error.message === "Network Error"
-              ? "Lost connection to the API. If the backend uses --reload, restart it with --reload-dir backend only."
-              : error.message;
-      return Promise.reject(new Error(detail || "Request failed"));
-    }
-    return Promise.reject(error instanceof Error ? error : new Error("Request failed"));
-  }
-);
-
-export async function startCloudScan(mode: ScanMode = "synthetic"): Promise<ScanStartResponse> {
-  const payload: ScanStartRequest = { mode };
-  const { data } = await scanClient.post<ScanStartResponse>("/scan/start", payload);
+export async function startCloudScan(
+  options: ScanMode | StartScanOptions = "synthetic"
+): Promise<ScanStartResponse> {
+  const payload: ScanStartRequest =
+    typeof options === "string"
+      ? { mode: options }
+      : {
+          mode: options.mode ?? "synthetic",
+          ...(options.aws_account_id != null ? { aws_account_id: options.aws_account_id } : {}),
+          ...(options.region ? { region: options.region } : {}),
+        };
+  const { data } = await apiClient.post<ScanStartResponse>("/scan/start", payload, {
+    timeout: 120_000,
+  });
   return validateObjectResponse<ScanStartResponse>(data, "scan start", [
     "scan_id",
     "status",
@@ -39,18 +35,21 @@ export async function startCloudScan(mode: ScanMode = "synthetic"): Promise<Scan
 }
 
 export async function fetchScanStatus(): Promise<ScanStatusResponse> {
-  const { data } = await scanClient.get<ScanStatusResponse>("/scan/status");
+  const { data } = await apiClient.get<ScanStatusResponse>("/scan/status", {
+    timeout: 120_000,
+  });
   return validateObjectResponse<ScanStatusResponse>(data, "scan status", ["status", "progress"]);
 }
 
 export interface ScanSourceResponse {
   mode: "aws" | "synthetic" | "unknown";
+  account_id?: string;
   region?: string;
   resource_count?: number;
   generated_at?: string;
 }
 
 export async function fetchScanSource(): Promise<ScanSourceResponse> {
-  const { data } = await scanClient.get<ScanSourceResponse>("/scan/source");
+  const { data } = await apiClient.get<ScanSourceResponse>("/scan/source");
   return validateObjectResponse<ScanSourceResponse>(data, "scan source", ["mode"]);
 }

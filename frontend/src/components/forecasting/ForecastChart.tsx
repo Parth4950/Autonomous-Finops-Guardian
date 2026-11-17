@@ -110,6 +110,8 @@ export function ForecastChart({ chartData, resources }: ForecastChartProps) {
             <SelectItem value="healthy">Healthy</SelectItem>
             <SelectItem value="zombie">Zombie</SelectItem>
             <SelectItem value="seasonal">Seasonal</SelectItem>
+            <SelectItem value="aws">AWS (Prophet)</SelectItem>
+            <SelectItem value="heuristic_fallback">Heuristic Fallback</SelectItem>
           </SelectContent>
         </Select>
 
@@ -139,6 +141,11 @@ export function ForecastChart({ chartData, resources }: ForecastChartProps) {
             Waste probability:{" "}
             <strong className="capitalize text-foreground">{selected.waste_probability}</strong>
           </span>
+          {selected.resource_type === "heuristic_fallback" && (
+            <span className="text-amber-300">
+              Heuristic fallback baseline (no CloudWatch historical series)
+            </span>
+          )}
         </div>
       )}
 

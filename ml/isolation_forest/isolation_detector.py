@@ -34,10 +34,12 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 logger = logging.getLogger(__name__)
 
+from backend.models.paths import workspace_path
+
 MODULE_DIR = Path(__file__).resolve().parent
-DEFAULT_DATASET_PATH = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
-DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
-DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
+DEFAULT_DATASET_PATH = workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
+DEFAULT_RESULTS_DIR = workspace_path(MODULE_DIR / "results")
+DEFAULT_FIGURES_DIR = workspace_path(MODULE_DIR / "figures")
 DEFAULT_PREDICTIONS_PATH = DEFAULT_RESULTS_DIR / "predictions.csv"
 
 FEATURE_COLUMNS: list[str] = [

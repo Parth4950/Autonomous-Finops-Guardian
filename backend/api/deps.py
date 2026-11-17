@@ -7,6 +7,7 @@ from functools import lru_cache
 from backend.services.anomaly_service import AnomalyService
 from backend.services.approval_service import ApprovalService
 from backend.services.audit_service import AuditService
+from backend.services.aws_account_service import AWSAccountService
 from backend.services.execution_service import ExecutionService
 from backend.services.forecast_service import ForecastService
 from backend.services.planner_service import PlannerService
@@ -64,3 +65,8 @@ def get_execution_service() -> ExecutionService:
 @lru_cache
 def get_scan_service() -> ScanService:
     return ScanService()
+
+
+@lru_cache
+def get_aws_account_service() -> AWSAccountService:
+    return AWSAccountService()

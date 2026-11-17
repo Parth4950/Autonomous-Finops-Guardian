@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from backend.models.paths import workspace_path
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -23,25 +24,36 @@ from ml.forecasting.prophet_forecaster import (  # noqa: E402
     load_forecast_series_cache,
 )
 
-OUTPUT_PATH = _PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_dashboard.json"
+OUTPUT_PATH = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_dashboard.json")
 
 
-def resource_type(resource_id: str) -> str:
+def resource_type(resource_id: str, row_type: object = None) -> str:
+    if row_type is not None and not pd.isna(row_type):
+        normalized = str(row_type).strip()
+        if normalized and normalized.lower() not in {"nan", "unknown"}:
+            return normalized
     if "-healthy-" in resource_id:
         return "healthy"
     if "-zombie-" in resource_id:
         return "zombie"
     if "-seasonal-" in resource_id:
         return "seasonal"
-    return "unknown"
+    return "heuristic_fallback"
 
 
-def load_chart_data(historical: pd.DataFrame, resource_ids: list[str]) -> dict[str, dict]:
+def load_chart_data(
+    historical: pd.DataFrame,
+    resource_ids: list[str],
+    cache_path: Path | None = None,
+) -> dict[str, dict]:
     """Load cached chart series or rebuild as a fallback for legacy pipeline runs."""
     chart_data: dict[str, dict] = {}
+    resolved_cache = cache_path or workspace_path(
+        _PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_series_cache.json"
+    )
 
     try:
-        chart_data = load_forecast_series_cache(DEFAULT_FORECAST_SERIES_CACHE_PATH)
+        chart_data = load_forecast_series_cache(resolved_cache)
         missing = [resource_id for resource_id in resource_ids if resource_id not in chart_data]
         if not missing:
             print(f"Loaded forecast chart cache for {len(chart_data)} resources.")
@@ -53,7 +65,10 @@ def load_chart_data(historical: pd.DataFrame, resource_ids: list[str]) -> dict[s
 
     forecaster = ProphetForecaster()
     for resource_id in missing:
-        resource_frame = historical[historical["resource_id"] == resource_id]
+        if not historical.empty and "resource_id" in historical.columns:
+            resource_frame = historical[historical["resource_id"] == resource_id]
+        else:
+            resource_frame = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization", "resource_type"])
         forecaster.forecast_resource(resource_id, resource_frame)
         chart_data[resource_id] = build_resource_chart_series(
             historical,
@@ -65,14 +80,23 @@ def load_chart_data(historical: pd.DataFrame, resource_ids: list[str]) -> dict[s
 
 
 def main() -> int:
-    historical_path = DEFAULT_HISTORICAL_PATH
-    results_path = DEFAULT_FORECAST_RESULTS_PATH
+    historical_path = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "data" / "historical_cpu_usage.csv")
+    results_path = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_results.csv")
+    cache_path = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_series_cache.json")
+    output_path = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "results" / "forecast_dashboard.json")
 
-    if not historical_path.exists() or not results_path.exists():
+    if not results_path.exists():
         print("Run prophet_forecaster.py first to generate CSV outputs.")
         return 1
 
-    historical = pd.read_csv(historical_path, parse_dates=["date"])
+    if historical_path.exists():
+        try:
+            historical = pd.read_csv(historical_path, parse_dates=["date"])
+        except pd.errors.EmptyDataError:
+            historical = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization", "resource_type"])
+    else:
+        historical = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization", "resource_type"])
+
     results = pd.read_csv(results_path)
     resource_ids = results["resource_id"].tolist()
 
@@ -83,11 +107,11 @@ def main() -> int:
 
     resources = []
     for _, row in results.iterrows():
-        rid = row["resource_id"]
+        rid = str(row["resource_id"])
         resources.append(
             {
                 "resource_id": rid,
-                "resource_type": resource_type(rid),
+                "resource_type": resource_type(rid, row.get("resource_type")),
                 "historical_avg_cpu": round(float(row["historical_avg_cpu"]), 2),
                 "forecast_avg_cpu": round(float(row["forecast_avg_cpu"]), 2),
                 "forecast_min_cpu": round(float(row["forecast_min_cpu"]), 2),
@@ -97,13 +121,14 @@ def main() -> int:
             }
         )
 
-    chart_data = load_chart_data(historical, resource_ids)
+    chart_data = load_chart_data(historical, resource_ids, cache_path=cache_path)
+    history_days = 0 if historical.empty else HISTORY_DAYS
 
     payload = {
         "meta": {
-            "history_days": HISTORY_DAYS,
+            "history_days": history_days,
             "forecast_days": FORECAST_DAYS,
-            "generated_from": str(results_path.relative_to(_PROJECT_ROOT)),
+            "generated_from": str(results_path.relative_to(workspace_path(_PROJECT_ROOT))),
         },
         "stats": {
             "total": len(results),
@@ -124,9 +149,9 @@ def main() -> int:
         "chart_data": chart_data,
     }
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"Exported forecast data to {OUTPUT_PATH}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"Exported forecast data to {output_path}")
     return 0
 
 

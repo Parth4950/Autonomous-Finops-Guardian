@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -24,15 +25,20 @@ if str(_PROJECT_ROOT) not in sys.path:
 from agents.scout.aws_metadata import metadata_from_ebs, metadata_from_ec2
 from agents.scout.metrics_collector import MetricsCollector
 from agents.scout.scout_agent import ScoutAgent
-from backend.utils.aws_client import AWSClientError, AWSConfigurationError
+from backend.models.paths import workspace_path
+from backend.utils.aws_client import (
+    AWSClientError,
+    AWSConfigurationError,
+    sanitize_aws_error_message,
+)
 
 logger = logging.getLogger(__name__)
 
-SCOUT_RESULTS_DIR = Path(__file__).resolve().parent / "results"
-DEFAULT_RESOURCES_CSV = _PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv"
-DEFAULT_HISTORICAL_CSV = _PROJECT_ROOT / "ml" / "forecasting" / "data" / "historical_cpu_usage.csv"
+SCOUT_RESULTS_DIR = workspace_path(Path(__file__).resolve().parent / "results")
+DEFAULT_RESOURCES_CSV = workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
+DEFAULT_HISTORICAL_CSV = workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "data" / "historical_cpu_usage.csv")
 DEFAULT_METADATA_CSV = SCOUT_RESULTS_DIR / "infrastructure_metadata.csv"
-DEFAULT_SCAN_SOURCE_JSON = _PROJECT_ROOT / "synthetic_data" / "scan_source.json"
+DEFAULT_SCAN_SOURCE_JSON = workspace_path(_PROJECT_ROOT / "synthetic_data" / "scan_source.json")
 
 AWS_METRICS_LOOKBACK_DAYS = 14
 MAX_EC2_INSTANCES = 100
@@ -66,19 +72,19 @@ class AwsResourceExporter:
         self,
         scout: ScoutAgent | None = None,
         metrics_collector: MetricsCollector | None = None,
-        resources_csv: Path = DEFAULT_RESOURCES_CSV,
-        historical_csv: Path = DEFAULT_HISTORICAL_CSV,
-        metadata_csv: Path = DEFAULT_METADATA_CSV,
-        scan_source_json: Path = DEFAULT_SCAN_SOURCE_JSON,
+        resources_csv: Path | None = None,
+        historical_csv: Path | None = None,
+        metadata_csv: Path | None = None,
+        scan_source_json: Path | None = None,
     ) -> None:
         self._scout = scout or ScoutAgent()
         self._metrics = metrics_collector or MetricsCollector(
             lookback_days=AWS_METRICS_LOOKBACK_DAYS
         )
-        self._resources_csv = resources_csv
-        self._historical_csv = historical_csv
-        self._metadata_csv = metadata_csv
-        self._scan_source_json = scan_source_json
+        self._resources_csv = resources_csv or workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
+        self._historical_csv = historical_csv or workspace_path(_PROJECT_ROOT / "ml" / "forecasting" / "data" / "historical_cpu_usage.csv")
+        self._metadata_csv = metadata_csv or workspace_path(Path(__file__).resolve().parent / "results" / "infrastructure_metadata.csv")
+        self._scan_source_json = scan_source_json or workspace_path(_PROJECT_ROOT / "synthetic_data" / "scan_source.json")
 
     def run(self) -> dict[str, Any]:
         """Execute AWS discovery and write pipeline artifacts."""
@@ -178,13 +184,26 @@ class AwsResourceExporter:
 
         if history_df.empty:
             logger.warning(
-                "No CloudWatch CPU history collected — Prophet will fall back to synthetic history."
+                "No CloudWatch CPU history collected — writing empty history header for heuristic fallback."
             )
+            pd.DataFrame(
+                columns=["resource_id", "date", "cpu_utilization", "resource_type"]
+            ).to_csv(self._historical_csv, index=False)
         else:
             history_df.to_csv(self._historical_csv, index=False)
 
+        account_id = os.getenv("FINOPS_AWS_ACCOUNT_ID", "").strip()
+        if not account_id:
+            try:
+                sts = self._scout._aws_client.create_client("sts")
+                caller = sts.get_caller_identity()
+                account_id = str(caller.get("Account") or "").strip()
+            except Exception:
+                account_id = ""
+
         scan_source = {
             "mode": "aws",
+            "account_id": account_id or "aws",
             "region": self._scout.region,
             "generated_at": datetime.now(UTC).isoformat(),
             "ec2_count": len(running_ec2),
@@ -250,11 +269,14 @@ def _aggregate_daily_cpu(series: list[Any]) -> dict[Any, float]:
 
 
 def is_aws_scan_mode(project_root: Path | None = None) -> bool:
-    """Return True when the latest scan source marker indicates live AWS discovery."""
-    root = project_root or _PROJECT_ROOT
-    marker = root / "synthetic_data" / "scan_source.json"
+    """Return True when the active scan workspace marker indicates live AWS discovery."""
+    marker = (
+        workspace_path(_PROJECT_ROOT / "synthetic_data" / "scan_source.json")
+        if project_root is None
+        else project_root / "synthetic_data" / "scan_source.json"
+    )
     if not marker.exists():
-        return False
+        return os.getenv("FINOPS_SCAN_MODE", "").strip().lower() == "aws"
     try:
         payload = json.loads(marker.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
@@ -289,13 +311,13 @@ def main() -> int:
         print()
         return 0
     except AWSConfigurationError as exc:
-        logger.error("AWS configuration error: %s", exc)
+        logger.error("AWS configuration error: %s", sanitize_aws_error_message(exc))
         return 1
     except AWSClientError as exc:
-        logger.error("AWS API error: %s", exc)
+        logger.error("AWS API error: %s", sanitize_aws_error_message(exc))
         return 1
     except Exception as exc:
-        logger.exception("AWS resource export failed: %s", exc)
+        logger.error("AWS resource export failed: %s", sanitize_aws_error_message(exc))
         return 1
 
 

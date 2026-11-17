@@ -134,6 +134,8 @@ export function ForecastComparisonTable({ data }: ForecastComparisonTableProps) 
             <SelectItem value="healthy">Healthy</SelectItem>
             <SelectItem value="zombie">Zombie</SelectItem>
             <SelectItem value="seasonal">Seasonal</SelectItem>
+            <SelectItem value="aws">AWS (Prophet)</SelectItem>
+            <SelectItem value="heuristic_fallback">Heuristic Fallback</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -181,7 +183,7 @@ export function ForecastComparisonTable({ data }: ForecastComparisonTableProps) 
               return (
                 <TableRow key={row.resource_id}>
                   <TableCell className="font-mono text-xs">{row.resource_id}</TableCell>
-                  <TableCell className="capitalize">{row.resource_type}</TableCell>
+                  <TableCell className="capitalize">{formatCategory(row.resource_type as never)}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {row.historical_avg_cpu.toFixed(2)}%
                   </TableCell>

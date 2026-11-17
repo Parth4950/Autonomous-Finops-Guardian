@@ -16,6 +16,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,10 +34,12 @@ logging.getLogger("prophet").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+from backend.models.paths import workspace_path
+
 MODULE_DIR = Path(__file__).resolve().parent
-DEFAULT_DATA_DIR = MODULE_DIR / "data"
-DEFAULT_RESULTS_DIR = MODULE_DIR / "results"
-DEFAULT_FIGURES_DIR = MODULE_DIR / "figures"
+DEFAULT_DATA_DIR = workspace_path(MODULE_DIR / "data")
+DEFAULT_RESULTS_DIR = workspace_path(MODULE_DIR / "results")
+DEFAULT_FIGURES_DIR = workspace_path(MODULE_DIR / "figures")
 DEFAULT_HISTORICAL_PATH = DEFAULT_DATA_DIR / "historical_cpu_usage.csv"
 DEFAULT_FORECAST_RESULTS_PATH = DEFAULT_RESULTS_DIR / "forecast_results.csv"
 DEFAULT_FORECAST_SERIES_CACHE_PATH = DEFAULT_RESULTS_DIR / "forecast_series_cache.json"
@@ -259,9 +263,15 @@ class ProphetForecaster:
         resource_id: str,
         resource_frame: pd.DataFrame,
         prophet_frame: pd.DataFrame,
+        baseline_cpu: float | None = None,
     ) -> dict[str, Any]:
-        """Flat-line forecast when CloudWatch history is too short for Prophet."""
-        historical_avg_cpu = round(float(prophet_frame["y"].mean()), 2) if len(prophet_frame) else 0.0
+        """Flat-line deterministic fallback forecast when CloudWatch history is unavailable or too short."""
+        if len(prophet_frame):
+            historical_avg_cpu = round(float(prophet_frame["y"].mean()), 2)
+        elif baseline_cpu is not None:
+            historical_avg_cpu = round(float(baseline_cpu), 2)
+        else:
+            historical_avg_cpu = 0.0
         forecast_avg_cpu = historical_avg_cpu
         forecast_min_cpu = historical_avg_cpu
         forecast_max_cpu = historical_avg_cpu
@@ -288,7 +298,11 @@ class ProphetForecaster:
                 "yhat_upper": min(100.0, forecast_avg_cpu + 5.0),
             }
         )
-        self._forecast_details[resource_id] = pd.concat([history_part, future], ignore_index=True)
+        self._forecast_details[resource_id] = (
+            future.copy()
+            if history_part.empty
+            else pd.concat([history_part, future], ignore_index=True)
+        )
 
         utilization_category = self.classify_utilization(forecast_avg_cpu)
         waste_probability = self.classify_waste_probability(
@@ -298,7 +312,7 @@ class ProphetForecaster:
 
         return {
             "resource_id": resource_id,
-            "resource_type": self._resource_type(resource_frame),
+            "resource_type": "heuristic_fallback",
             "historical_avg_cpu": historical_avg_cpu,
             "forecast_avg_cpu": forecast_avg_cpu,
             "forecast_min_cpu": forecast_min_cpu,
@@ -419,9 +433,10 @@ class ProphetForecaster:
     def save_series_cache(
         self,
         historical_data: pd.DataFrame,
-        output_path: Path = DEFAULT_FORECAST_SERIES_CACHE_PATH,
+        output_path: Path | None = None,
     ) -> Path:
         """Persist per-resource chart series so export does not retrain Prophet models."""
+        resolved_path = output_path or workspace_path(MODULE_DIR / "results" / "forecast_series_cache.json")
         chart_data = {
             resource_id: build_resource_chart_series(
                 historical_data,
@@ -430,10 +445,10 @@ class ProphetForecaster:
             )
             for resource_id in self._forecast_details
         }
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(chart_data), encoding="utf-8")
-        logger.info("Saved forecast series cache for %d resources to %s", len(chart_data), output_path)
-        return output_path
+        resolved_path.parent.mkdir(parents=True, exist_ok=True)
+        resolved_path.write_text(json.dumps(chart_data), encoding="utf-8")
+        logger.info("Saved forecast series cache for %d resources to %s", len(chart_data), resolved_path)
+        return resolved_path
 
 
 def build_resource_chart_series(
@@ -443,11 +458,19 @@ def build_resource_chart_series(
     forecast_days: int = FORECAST_DAYS,
 ) -> dict[str, Any]:
     """Build dashboard chart payload for one resource from stored Prophet output."""
-    history = historical[historical["resource_id"] == resource_id].sort_values("date")
+    if historical is not None and not historical.empty and "resource_id" in historical.columns:
+        history = historical[historical["resource_id"] == resource_id].sort_values("date")
+    else:
+        history = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization"])
     forecast = forecast_detail.copy()
     forecast["ds"] = pd.to_datetime(forecast["ds"])
     forecast_tail = forecast.tail(forecast_days)
-    last_history_date = pd.to_datetime(history["date"].max())
+    if not history.empty:
+        last_history_date = pd.to_datetime(history["date"].max())
+    elif not forecast_tail.empty:
+        last_history_date = pd.to_datetime(forecast_tail["ds"].min()) - pd.Timedelta(days=1)
+    else:
+        last_history_date = pd.Timestamp.utcnow().normalize()
 
     return {
         "forecast_start": last_history_date.date().isoformat(),
@@ -557,8 +580,8 @@ class ForecastReporter:
 class ForecastVisualizer:
     """Generate matplotlib visualizations for forecast analysis."""
 
-    def __init__(self, figures_dir: Path = DEFAULT_FIGURES_DIR) -> None:
-        self._figures_dir = figures_dir
+    def __init__(self, figures_dir: Path | None = None) -> None:
+        self._figures_dir = figures_dir or workspace_path(MODULE_DIR / "figures")
 
     def generate_all(
         self,
@@ -589,7 +612,7 @@ class ForecastVisualizer:
         output_path = self._figures_dir / "actual_vs_forecast.png"
         sample_ids = []
 
-        for resource_type in ["healthy", "zombie", "seasonal", "aws"]:
+        for resource_type in ["healthy", "zombie", "seasonal", "aws", "heuristic_fallback"]:
             matches = results[results["resource_type"] == resource_type]
             if not matches.empty:
                 sample_ids.append(matches.iloc[0]["resource_id"])
@@ -611,19 +634,27 @@ class ForecastVisualizer:
             axes = [axes]
 
         for ax, resource_id in zip(axes, sample_ids, strict=True):
-            history = historical_data[historical_data["resource_id"] == resource_id].copy()
+            if historical_data is not None and not historical_data.empty and "resource_id" in historical_data.columns:
+                history = historical_data[historical_data["resource_id"] == resource_id].copy()
+            else:
+                history = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization"])
             forecast = forecaster.get_forecast_detail(resource_id).copy()
 
-            history["date"] = pd.to_datetime(history["date"])
             forecast["ds"] = pd.to_datetime(forecast["ds"])
 
-            ax.plot(
-                history["date"].to_numpy(),
-                history["cpu_utilization"].to_numpy(),
-                label="Actual",
-                color="#2c3e50",
-                linewidth=1.5,
-            )
+            if not history.empty:
+                history["date"] = pd.to_datetime(history["date"])
+                ax.plot(
+                    history["date"].to_numpy(),
+                    history["cpu_utilization"].to_numpy(),
+                    label="Actual",
+                    color="#2c3e50",
+                    linewidth=1.5,
+                )
+                forecast_start_dt = history["date"].max().to_pydatetime()
+            else:
+                forecast_start_dt = forecast["ds"].min().to_pydatetime()
+
             ax.plot(
                 forecast["ds"].to_numpy(),
                 forecast["yhat"].to_numpy(),
@@ -639,7 +670,7 @@ class ForecastVisualizer:
                 alpha=0.15,
             )
             ax.axvline(
-                history["date"].max().to_pydatetime(),
+                forecast_start_dt,
                 color="gray",
                 linestyle="--",
                 linewidth=1,
@@ -659,7 +690,13 @@ class ForecastVisualizer:
     def _plot_forecast_trend(self, results: pd.DataFrame) -> Path:
         """Plot forecast average CPU distribution by resource type."""
         output_path = self._figures_dir / "forecast_trend.png"
-        palette = {"healthy": "#2ecc71", "zombie": "#e74c3c", "seasonal": "#3498db", "aws": "#9b59b6"}
+        palette = {
+            "healthy": "#2ecc71",
+            "zombie": "#e74c3c",
+            "seasonal": "#3498db",
+            "aws": "#9b59b6",
+            "heuristic_fallback": "#f39c12",
+        }
 
         fig, ax = plt.subplots(figsize=(10, 6))
         plotted = False
@@ -775,14 +812,16 @@ class ForecastingPipeline:
         data_generator: HistoricalCPUDataGenerator | None = None,
         forecaster: ProphetForecaster | None = None,
         visualizer: ForecastVisualizer | None = None,
-        historical_path: Path = DEFAULT_HISTORICAL_PATH,
-        results_path: Path = DEFAULT_FORECAST_RESULTS_PATH,
+        historical_path: Path | None = None,
+        results_path: Path | None = None,
+        inventory_path: Path | None = None,
     ) -> None:
         self._data_generator = data_generator or HistoricalCPUDataGenerator()
         self._forecaster = forecaster or ProphetForecaster()
         self._visualizer = visualizer or ForecastVisualizer()
-        self._historical_path = historical_path
-        self._results_path = results_path
+        self._historical_path = historical_path or workspace_path(MODULE_DIR / "data" / "historical_cpu_usage.csv")
+        self._results_path = results_path or workspace_path(MODULE_DIR / "results" / "forecast_results.csv")
+        self._inventory_path = inventory_path or workspace_path(_PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv")
 
     def run(self) -> pd.DataFrame:
         """Execute generate → forecast → analyze → export → visualize."""
@@ -790,42 +829,135 @@ class ForecastingPipeline:
         self._data_generator.save(historical_data, self._historical_path)
         return self._run_forecast(historical_data)
 
+    def _load_inventory_baseline(self) -> pd.DataFrame:
+        """Load discovered inventory resources from the active scan workspace when available."""
+        if not self._inventory_path.exists():
+            return pd.DataFrame(columns=["resource_id", "avg_cpu"])
+        try:
+            inventory = pd.read_csv(self._inventory_path)
+        except pd.errors.EmptyDataError:
+            return pd.DataFrame(columns=["resource_id", "avg_cpu"])
+        if "resource_id" not in inventory.columns:
+            return pd.DataFrame(columns=["resource_id", "avg_cpu"])
+        return inventory
+
+    def _build_fallback_forecasts(
+        self,
+        inventory: pd.DataFrame,
+        exclude_ids: set[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        """Generate clearly labelled heuristic fallback forecasts for resources without CloudWatch history."""
+        excluded = exclude_ids or set()
+        empty_resource_frame = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization", "resource_type"])
+        empty_prophet_frame = pd.DataFrame(columns=["ds", "y"])
+        rows: list[dict[str, Any]] = []
+
+        if not inventory.empty:
+            for _, item in inventory.iterrows():
+                resource_id = str(item.get("resource_id") or "").strip()
+                if not resource_id or resource_id in excluded:
+                    continue
+                raw_cpu = item.get("avg_cpu")
+                baseline_cpu = 0.0 if raw_cpu is None or pd.isna(raw_cpu) else float(raw_cpu)
+                rows.append(
+                    self._forecaster._heuristic_forecast(
+                        resource_id=resource_id,
+                        resource_frame=empty_resource_frame,
+                        prophet_frame=empty_prophet_frame,
+                        baseline_cpu=baseline_cpu,
+                    )
+                )
+        elif not excluded:
+            # Standalone fallback when neither historical data nor inventory exists.
+            rows.append(
+                self._forecaster._heuristic_forecast(
+                    resource_id="res-fallback-0001",
+                    resource_frame=empty_resource_frame,
+                    prophet_frame=empty_prophet_frame,
+                    baseline_cpu=0.0,
+                )
+            )
+
+        return rows
+
     def run_from_existing_history(self) -> pd.DataFrame:
-        """Forecast using CloudWatch-derived CPU history from an AWS scan."""
-        if not self._historical_path.exists():
-            raise HistoricalDataError(
-                f"Historical CPU data not found at {self._historical_path}. "
-                "Run agents/scout/export_resources.py first."
+        """Forecast using CloudWatch-derived CPU history, falling back to heuristic baselines when unavailable."""
+        empty_history = pd.DataFrame(columns=["resource_id", "date", "cpu_utilization", "resource_type"])
+        historical_data = empty_history
+
+        if self._historical_path.exists():
+            try:
+                loaded = pd.read_csv(self._historical_path, parse_dates=["date"])
+            except pd.errors.EmptyDataError:
+                loaded = empty_history
+
+            if not loaded.empty:
+                required = {"resource_id", "date", "cpu_utilization"}
+                if not required.issubset(loaded.columns):
+                    raise HistoricalDataError(
+                        f"Historical data missing columns: {required - set(loaded.columns)}"
+                    )
+                if "resource_type" not in loaded.columns:
+                    loaded = loaded.copy()
+                    loaded["resource_type"] = "aws"
+                historical_data = loaded
+        else:
+            logger.warning(
+                "Historical CPU data not found at %s — generating heuristic fallback forecasts.",
+                self._historical_path,
             )
 
-        historical_data = pd.read_csv(self._historical_path, parse_dates=["date"])
-        required = {"resource_id", "date", "cpu_utilization"}
-        if not required.issubset(historical_data.columns):
-            raise HistoricalDataError(
-                f"Historical data missing columns: {required - set(historical_data.columns)}"
+        if historical_data.empty:
+            logger.warning(
+                "No CloudWatch CPU history rows available — using heuristic fallback forecast."
             )
-
-        if "resource_type" not in historical_data.columns:
-            historical_data = historical_data.copy()
-            historical_data["resource_type"] = "aws"
+            self._historical_path.parent.mkdir(parents=True, exist_ok=True)
+            empty_history.to_csv(self._historical_path, index=False)
+            inventory = self._load_inventory_baseline()
+            fallback_rows = self._build_fallback_forecasts(inventory)
+            results = pd.DataFrame(fallback_rows)
+            return self._export_and_visualize(historical_data, results)
 
         logger.info(
             "Using existing CPU history — %d rows across %d resources",
             len(historical_data),
             historical_data["resource_id"].nunique(),
         )
-        return self._run_forecast(historical_data)
+        results = self._forecaster.forecast_all(historical_data)
+        inventory = self._load_inventory_baseline()
+        extra_rows = self._build_fallback_forecasts(
+            inventory,
+            exclude_ids=set(results["resource_id"].astype(str).tolist()),
+        )
+        if extra_rows:
+            logger.info(
+                "Added %d heuristic fallback forecast(s) for inventory resource(s) without CloudWatch history.",
+                len(extra_rows),
+            )
+            results = pd.concat([results, pd.DataFrame(extra_rows)], ignore_index=True)
+
+        return self._export_and_visualize(historical_data, results)
 
     def _run_forecast(self, historical_data: pd.DataFrame) -> pd.DataFrame:
         """Train Prophet models and export forecast artifacts."""
         results = self._forecaster.forecast_all(historical_data)
-        self._forecaster.save_series_cache(historical_data)
+        return self._export_and_visualize(historical_data, results)
+
+    def _export_and_visualize(
+        self,
+        historical_data: pd.DataFrame,
+        results: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """Export forecast CSV, series cache, and summary figures."""
+        series_cache_path = self._results_path.parent / "forecast_series_cache.json"
+        self._forecaster.save_series_cache(historical_data, output_path=series_cache_path)
         summary = ForecastAnalyzer.summarize(results)
         top_waste = ForecastAnalyzer.get_top_waste_candidates(results)
 
         self._results_path.parent.mkdir(parents=True, exist_ok=True)
         export_columns = [
             "resource_id",
+            "resource_type",
             "historical_avg_cpu",
             "forecast_avg_cpu",
             "forecast_min_cpu",

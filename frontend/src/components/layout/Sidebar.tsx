@@ -8,6 +8,7 @@ import {
   History,
   LayoutDashboard,
   LineChart,
+  Settings,
   Shield,
   ShieldCheck,
   TrendingDown,
@@ -27,6 +28,7 @@ const navItems = [
   { to: "/plans", label: "Remediation Plans", icon: TrendingDown },
   { to: "/approvals", label: "Approval Center", icon: CheckSquare },
   { to: "/executions", label: "Execution History", icon: History },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 interface SidebarProps {

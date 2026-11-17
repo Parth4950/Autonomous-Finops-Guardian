@@ -5,6 +5,8 @@ import { useHealth } from "@/hooks/useApiQueries";
 import { useDataScanMode } from "@/hooks/useDataScanMode";
 import { formatRelativeFromMs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -12,6 +14,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuClick, title = "Dashboard" }: NavbarProps) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { data, isError, isFetching, dataUpdatedAt, isLoading } = useHealth();
   const scanMode = useDataScanMode();
 
@@ -67,15 +71,28 @@ export function Navbar({ onMenuClick, title = "Dashboard" }: NavbarProps) {
             ⌘K
           </kbd>
         </div>
-        <Button variant="ghost" size="icon" disabled aria-disabled title="Notifications coming soon">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Notification preferences"
+          aria-label="Notification preferences"
+          onClick={() => navigate("/settings?tab=notifications")}
+        >
           <Bell className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" disabled aria-disabled title="Settings coming soon">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Settings"
+          aria-label="Settings"
+          onClick={() => navigate("/settings")}
+        >
           <Settings className="h-4 w-4" />
         </Button>
-        <div className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-          PG
-        </div>
+        <Button variant="ghost" className="ml-1 h-9 gap-2 px-2" title={user?.email} onClick={() => { void logout().catch(() => undefined).finally(() => navigate("/login", { replace: true })); }}>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">{(user?.full_name??"U").split(/\s+/).map(part=>part[0]).slice(0,2).join("").toUpperCase()}</span>
+          <span className="hidden text-xs md:inline">Sign out</span>
+        </Button>
       </div>
     </header>
   );

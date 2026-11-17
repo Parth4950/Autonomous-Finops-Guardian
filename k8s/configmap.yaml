@@ -8,4 +8,5 @@ data:
   ALLOW_AWS_SCAN: "false"
   AWS_REGION: ap-south-1
   MPLBACKEND: Agg
-  CORS_ALLOW_ORIGINS: http://localhost
+  DATABASE_URL: sqlite:////app/runtime/finops-auth.db
+  CORS_ALLOW_ORIGINS: http://localhost:8080,http://127.0.0.1:8080,http://localhost,http://finops.local

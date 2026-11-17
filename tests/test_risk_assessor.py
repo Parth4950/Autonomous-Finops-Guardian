@@ -1,9 +1,15 @@
+import json
+import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
 import pandas as pd
 
 from agents.risk_assessor.risk_assessor import WasteScoreEngine
+from agents.scout.aws_metadata import AWSInfrastructureMetadataLoader
+from agents.scout.resource_exporter import is_aws_scan_mode
 
 
 class WasteScoreEngineAwsCostTests(unittest.TestCase):
@@ -44,6 +50,36 @@ class WasteScoreEngineAwsCostTests(unittest.TestCase):
         self.assertTrue(enriched.empty)
         self.assertIn("monthly_cost", enriched.columns)
         self.assertIn("waste_score", enriched.columns)
+
+    def test_is_aws_scan_mode_and_metadata_loader_use_active_workspace(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            marker = workspace / "synthetic_data" / "scan_source.json"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text(json.dumps({"mode": "aws", "region": "ap-south-1"}), encoding="utf-8")
+
+            metadata_csv = workspace / "agents" / "scout" / "results" / "infrastructure_metadata.csv"
+            metadata_csv.parent.mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(
+                [
+                    {
+                        "resource_id": "i-workspace-ec2",
+                        "environment": "production",
+                        "business_critical": True,
+                        "attached_to_load_balancer": False,
+                        "member_of_autoscaling_group": True,
+                        "owner_exists": True,
+                        "recent_activity_days": 0,
+                    }
+                ]
+            ).to_csv(metadata_csv, index=False)
+
+            with patch.dict(os.environ, {"FINOPS_WORKSPACE_DIR": str(workspace)}):
+                self.assertTrue(is_aws_scan_mode())
+                loaded = AWSInfrastructureMetadataLoader().generate(["i-workspace-ec2"])
+                self.assertEqual(len(loaded), 1)
+                self.assertEqual(loaded.iloc[0]["environment"], "production")
+                self.assertTrue(bool(loaded.iloc[0]["business_critical"]))
 
 
 if __name__ == "__main__":

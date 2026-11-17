@@ -20,6 +20,14 @@ class ScanStartRequest(BaseModel):
         default="synthetic",
         description="Discovery mode: synthetic (default) or live AWS via Scout Agent.",
     )
+    aws_account_id: int | None = Field(
+        default=None,
+        description="Connected AWSAccount ID owned by the authenticated user.",
+    )
+    region: str | None = Field(
+        default=None,
+        description="Optional AWS region override for this scan.",
+    )
 
 
 class ScanStartResponse(BaseModel):
@@ -27,6 +35,8 @@ class ScanStartResponse(BaseModel):
     status: str
     message: str
     scan_mode: ScanMode = "synthetic"
+    aws_account_id: int | None = None
+    region: str | None = None
 
 
 class ScanStatusResponse(BaseModel):

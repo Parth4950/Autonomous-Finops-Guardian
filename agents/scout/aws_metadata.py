@@ -3,17 +3,24 @@
 from __future__ import annotations
 
 import logging
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
 import pandas as pd
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from backend.models.paths import workspace_path
+
 logger = logging.getLogger(__name__)
 
 Environment = Literal["production", "staging", "development"]
 
-DEFAULT_METADATA_CSV = (
+DEFAULT_METADATA_CSV = workspace_path(
     Path(__file__).resolve().parent / "results" / "infrastructure_metadata.csv"
 )
 
@@ -98,8 +105,10 @@ def metadata_from_ebs(finding: dict[str, Any]) -> dict[str, Any]:
 class AWSInfrastructureMetadataLoader:
     """Load Scout-exported metadata for the Risk Assessor pipeline."""
 
-    def __init__(self, metadata_path: Path = DEFAULT_METADATA_CSV) -> None:
-        self._metadata_path = metadata_path
+    def __init__(self, metadata_path: Path | None = None) -> None:
+        self._metadata_path = metadata_path or workspace_path(
+            Path(__file__).resolve().parent / "results" / "infrastructure_metadata.csv"
+        )
 
     def generate(self, resource_ids: list[str]) -> pd.DataFrame:
         if not self._metadata_path.exists():

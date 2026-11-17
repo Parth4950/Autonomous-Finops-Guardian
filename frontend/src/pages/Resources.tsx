@@ -52,7 +52,8 @@ export default function ResourcesPage() {
         isError={isError}
         error={error}
         onRetry={() => void refetch()}
-        loadingMessage="Loading resource inventory..."
+        loadingMessage="Loading resource inventory..."
+        emptyMessage="No resources discovered for this account yet. Run a cloud scan from Overview to populate your inventory."
       >
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
