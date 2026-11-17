@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.api.deps import get_execution_service
-from backend.auth.dependencies import current_user
+from backend.auth.dependencies import current_user_or_simulation as current_user
 from backend.db.session import get_db
 from backend.models.auth import User
 from backend.schemas.common import PaginatedResponse

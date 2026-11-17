@@ -32,11 +32,12 @@ export function useScanSource() {
   });
 }
 
-export function useAwsAccounts() {
+export function useAwsAccounts(enabled = true) {
   return useQuery({
     queryKey: queryKeys.awsAccounts,
     queryFn: fetchAwsAccounts,
     staleTime: 30_000,
+    enabled,
   });
 }
 

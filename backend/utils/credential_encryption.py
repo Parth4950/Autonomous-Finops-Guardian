@@ -130,6 +130,12 @@ def decrypt_aws_credentials(
     except (ValueError, binascii.Error) as exc:
         raise CredentialTamperError("Encrypted credential envelope encoding is corrupted.") from exc
 
+    if (
+        base64.urlsafe_b64encode(nonce).decode("ascii") != parts[1]
+        or base64.urlsafe_b64encode(ciphertext).decode("ascii") != parts[2]
+    ):
+        raise CredentialTamperError("Encrypted credential envelope encoding is non-canonical or tampered.")
+
     if len(nonce) != NONCE_BYTES or len(ciphertext) <= 16:
         raise CredentialTamperError("Encrypted credential envelope length is invalid.")
 

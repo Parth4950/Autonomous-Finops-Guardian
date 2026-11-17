@@ -192,3 +192,27 @@ class PipelineApiIsolationTests(unittest.TestCase):
             self.assertEqual(record.log_lines, ["safe simulated result"])
         self.assertNotIn("resource-2", client.get("/executions").text)
 
+    def test_simulation_mode_works_without_auth_and_never_mixes_user_data(self):
+        sim_client = TestClient(app)
+        try:
+            sim_headers = {"X-FinOps-Mode": "simulation"}
+            for path in ("/resources", "/anomalies", "/forecast", "/risk", "/audit", "/audit/report", "/plans", "/waste", "/approvals", "/executions", "/scan/source"):
+                response = sim_client.get(path, headers=sim_headers)
+                self.assertEqual(response.status_code, 200, (path, response.text))
+                self.assertNotIn("resource-1", response.text)
+                self.assertNotIn("resource-2", response.text)
+
+            # Simulation mode cannot access account-only endpoints or trigger live AWS scans
+            self.assertEqual(sim_client.get("/aws/accounts", headers=sim_headers).status_code, 401)
+            sim_client.get("/auth/csrf")
+            csrf = sim_client.cookies.get("finops_csrf")
+            aws_scan = sim_client.post(
+                "/scan/start",
+                json={"mode": "aws"},
+                headers={"X-FinOps-Mode": "simulation", "X-CSRF-Token": csrf, "Origin": "http://localhost:5173"},
+            )
+            self.assertEqual(aws_scan.status_code, 403)
+        finally:
+            sim_client.close()
+
+
