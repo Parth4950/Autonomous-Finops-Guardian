@@ -240,8 +240,44 @@ export interface ExecutionTriggerResponse {
 
 export type ScanMode = "synthetic" | "aws";
 
+export interface AWSAccount {
+  id: number;
+  user_id: number;
+  display_name: string;
+  aws_account_id: string | null;
+  arn: string | null;
+  default_region: string;
+  access_key_id_masked: string;
+  has_session_token: boolean;
+  verification_status: "unverified" | "verified" | "invalid" | "expired" | string;
+  last_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AWSAccountCreateInput {
+  display_name: string;
+  access_key_id: string;
+  secret_access_key: string;
+  session_token?: string | null;
+  default_region?: string;
+  verify?: boolean;
+}
+
+export interface AWSAccountUpdateInput {
+  display_name?: string;
+  default_region?: string;
+  access_key_id?: string;
+  secret_access_key?: string;
+  session_token?: string | null;
+  clear_session_token?: boolean;
+  verify?: boolean;
+}
+
 export interface ScanStartRequest {
   mode?: ScanMode;
+  aws_account_id?: number | null;
+  region?: string | null;
 }
 
 export interface ScanStartResponse {
@@ -249,6 +285,8 @@ export interface ScanStartResponse {
   status: string;
   message: string;
   scan_mode: ScanMode;
+  aws_account_id?: number | null;
+  region?: string | null;
 }
 
 export interface ScanStepProgress {

@@ -10,6 +10,7 @@ import "./index.css";
 
 import { ToastProvider } from "@/components/ui/toast";
 import { queryClient } from "@/lib/queryClient";
+import { ThemeProvider } from "@/lib/theme";
 
 
 
@@ -17,15 +18,19 @@ createRoot(document.getElementById("root")!).render(
 
   <StrictMode>
 
-    <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
 
-      <ToastProvider>
+      <QueryClientProvider client={queryClient}>
 
-        <App />
+        <ToastProvider>
 
-      </ToastProvider>
+          <App />
 
-    </QueryClientProvider>
+        </ToastProvider>
+
+      </QueryClientProvider>
+
+    </ThemeProvider>
 
   </StrictMode>
 
