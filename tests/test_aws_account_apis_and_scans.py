@@ -350,6 +350,41 @@ class AWSAccountApiAndScanTests(unittest.TestCase):
             )
         )
         client = self.clients[0]
+        app.dependency_overrides[get_scan_service] = lambda: ScanService(
+            session_factory=self.factory,
+            process_runner=lambda *args, **kwargs: SimpleNamespace(
+                returncode=0, stdout="", stderr=""
+            ),
+        )
+        missing_account = client.post(
+            "/scan/start",
+            json={"mode": "aws"},
+            headers=self._csrf(1),
+        )
+        self.assertEqual(missing_account.status_code, 400, missing_account.text)
+        self.assertIn("verified AWS account", missing_account.json()["detail"])
+
+        unverified = client.post(
+            "/aws/accounts",
+            json={
+                "display_name": "Unverified Account",
+                "access_key_id": MOCK_ASIA_EXPIRED,
+                "secret_access_key": "test-secret-only",
+                "session_token": "test-token-only",
+                "default_region": "us-east-1",
+                "verify": False,
+            },
+            headers=self._csrf(1),
+        )
+        self.assertEqual(unverified.status_code, 201, unverified.text)
+        rejected = client.post(
+            "/scan/start",
+            json={"mode": "aws", "aws_account_id": unverified.json()["id"]},
+            headers=self._csrf(1),
+        )
+        self.assertEqual(rejected.status_code, 400, rejected.text)
+        self.assertIn("not verified", rejected.json()["detail"])
+
         connected = client.post(
             "/aws/accounts",
             json={

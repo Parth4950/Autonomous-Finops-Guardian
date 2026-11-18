@@ -44,6 +44,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { queryKeys } from "@/hooks/queryKeys";
 import { useAwsAccounts } from "@/hooks/useApiQueries";
+import { useCloudScan } from "@/hooks/useCloudScan";
 import { useNotificationPreferences } from "@/lib/preferences";
 import { type ThemePreference, useTheme } from "@/lib/theme";
 import { cn, formatDate } from "@/lib/utils";
@@ -216,6 +217,7 @@ function AwsAccountsSection() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const { data: accounts, isLoading, isError, error, refetch } = useAwsAccounts();
+  const { startScanAsync, isScanning } = useCloudScan();
 
   // Connect form state
   const [displayName, setDisplayName] = useState("");
@@ -229,6 +231,7 @@ function AwsAccountsSection() {
 
   // Per-account action state
   const [verifyingId, setVerifyingId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editingAccount, setEditingAccount] = useState<AWSAccount | null>(null);
   const [editDisplayName, setEditDisplayName] = useState("");
@@ -292,6 +295,15 @@ function AwsAccountsSection() {
           "Credentials verified",
           `${updated.display_name} verified against AWS STS (${updated.aws_account_id ?? "account"}).`
         );
+        try {
+          await startScanAsync({
+            mode: "aws",
+            aws_account_id: updated.id,
+            region: updated.default_region,
+          });
+        } catch {
+          // useCloudScan reports the sanitized scan-start error.
+        }
       } else {
         toast.error(
           `Verification ${updated.verification_status}`,
@@ -302,6 +314,37 @@ function AwsAccountsSection() {
       toast.error("Verification failed", extractErrorMessage(err));
     } finally {
       setVerifyingId(null);
+    }
+  };
+
+  const handleRefreshAndScan = async () => {
+    setRefreshing(true);
+    try {
+      const refreshed = await refetch();
+      if (refreshed.error) throw refreshed.error;
+      const verifiedAccount = refreshed.data?.find(
+        (account) => account.verification_status === "verified"
+      );
+      if (!verifiedAccount) {
+        toast.error(
+          "No verified AWS account",
+          "Verify an AWS account before starting a live scan."
+        );
+        return;
+      }
+      try {
+        await startScanAsync({
+          mode: "aws",
+          aws_account_id: verifiedAccount.id,
+          region: verifiedAccount.default_region,
+        });
+      } catch {
+        // useCloudScan reports the sanitized scan-start error.
+      }
+    } catch (err) {
+      toast.error("Refresh or scan failed", extractErrorMessage(err));
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -519,9 +562,15 @@ function AwsAccountsSection() {
                 Select any connected account when launching a Live AWS Scan from the Overview page
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isLoading}>
-              <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", isLoading && "animate-spin")} />
-              Refresh
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleRefreshAndScan()}
+              disabled={isLoading || refreshing || isScanning}
+              title="Refresh AWS account status and start a fresh scan with the most recently connected verified account"
+            >
+              <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", (isLoading || refreshing) && "animate-spin")} />
+              {refreshing ? "Refreshing & Scanning…" : "Refresh"}
             </Button>
           </CardHeader>
           <CardContent>
@@ -579,14 +628,14 @@ function AwsAccountsSection() {
                               variant="outline"
                               size="sm"
                               onClick={() => void handleVerify(account)}
-                              disabled={verifyingId === account.id}
+                              disabled={verifyingId === account.id || isScanning}
                             >
                               {verifyingId === account.id ? (
                                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                               )}
-                              Verify
+                              {verifyingId === account.id ? "Verifying & Scanning…" : "Verify"}
                             </Button>
                             <Button
                               variant="outline"

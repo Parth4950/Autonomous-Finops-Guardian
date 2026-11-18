@@ -92,10 +92,10 @@ Multiple origins: comma-separated, no spaces.
 
 | Feature | Local | Vercel + Render |
 |---------|-------|-----------------|
-| Live AWS scan | Yes (with `.env` creds) | Disabled (`ALLOW_AWS_SCAN=false`) |
+| Live AWS scan | Yes (select a verified Settings account; `ALLOW_AWS_SCAN=true`) | Disabled (`ALLOW_AWS_SCAN=false`) |
 | Synthetic scan | Yes | Yes (may be slow on free tier) |
 | Real execution | Only if `EXECUTION_MODE=real` | Blocked — keep `simulation` |
-| AWS credentials | Your `.env` | **Never** on Render |
+| AWS credentials | Encrypted account connection in Settings; `.env` only for standalone CLI use | **Never** on Render |
 
 Keep **Live AWS discovery** on your laptop; use the **hosted URL** for portfolio demos with synthetic data.
 

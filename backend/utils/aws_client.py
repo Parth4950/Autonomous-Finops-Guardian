@@ -21,6 +21,7 @@ from botocore.exceptions import (
     NoCredentialsError,
     PartialCredentialsError,
 )
+from botocore.config import Config
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -272,6 +273,11 @@ class AWSClientHelper:
                 "aws_access_key_id": self._credentials.access_key_id,
                 "aws_secret_access_key": self._credentials.secret_access_key,
                 "region_name": self._credentials.region,
+                "config": Config(
+                    connect_timeout=5,
+                    read_timeout=30,
+                    retries={"mode": "standard", "max_attempts": 3},
+                ),
             }
             if self._credentials.session_token:
                 client_options["aws_session_token"] = self._credentials.session_token

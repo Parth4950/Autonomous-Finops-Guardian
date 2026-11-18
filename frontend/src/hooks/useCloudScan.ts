@@ -93,11 +93,17 @@ export function useCloudScan() {
   return {
     startScan: (options: ScanMode | StartScanOptions = "synthetic") =>
       startMutation.mutate(options),
+    startScanAsync: (options: ScanMode | StartScanOptions) =>
+      startMutation.mutateAsync(options),
     isScanning: isScanning || startMutation.isPending,
-    progress: statusQuery.data?.progress ?? (startMutation.isPending ? 5 : 0),
-    currentStep: statusQuery.data?.current_step,
+    progress: startMutation.isPending ? 0 : statusQuery.data?.progress ?? 0,
+    currentStep: startMutation.isPending ? undefined : statusQuery.data?.current_step,
+    steps: startMutation.isPending ? [] : statusQuery.data?.steps ?? [],
+    scanError: statusQuery.data?.error,
     scanStatus: status,
-    scanMode: statusQuery.data?.scan_mode ?? activeRequestedMode,
+    scanMode: startMutation.isPending
+      ? activeRequestedMode ?? statusQuery.data?.scan_mode
+      : statusQuery.data?.scan_mode ?? activeRequestedMode,
     isStarting: startMutation.isPending,
   };
 }

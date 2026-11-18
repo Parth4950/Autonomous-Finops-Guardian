@@ -5,10 +5,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import queue
 import re
+import signal
 import subprocess
 import sys
 import threading
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -29,6 +32,8 @@ from backend.utils.credential_encryption import CredentialTamperError
 logger = logging.getLogger(__name__)
 
 _FORECAST_PROGRESS = re.compile(r"Forecast progress: (\d+) / (\d+)")
+_AWS_METRICS_PROGRESS = re.compile(r"Collecting CloudWatch metrics \((\d+)\s*/\s*(\d+)\)")
+DEFAULT_PIPELINE_STAGE_TIMEOUT_SECONDS = 900
 
 PYTHON = sys.executable
 ScanMode = Literal["synthetic", "aws"]
@@ -67,7 +72,7 @@ class ScanState:
     scan_mode: ScanMode = "synthetic"
     aws_account_id: int | None = None
     region: str | None = None
-    steps: list[dict[str, str]] = field(default_factory=list)
+    steps: list[dict[str, str | None]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -191,7 +196,11 @@ class ScanService:
         return ScanState(
             scan_id=row.scan_id, status=row.status, progress=row.progress,
             current_step=row.current_stage, message=row.message, error=row.error_message,
-            scan_mode=row.mode, steps=[{"name": stage.name, "status": stage.status} for stage in stages],
+            scan_mode=row.mode,
+            steps=[
+                {"name": stage.name, "status": stage.status, "error": stage.error_message}
+                for stage in stages
+            ],
         )
 
     def _resolve_aws_context(
@@ -204,8 +213,6 @@ class ScanService:
     ) -> _ScanAWSContext:
         from backend.config import aws_scan_enabled
         from backend.services.aws_account_service import _validate_region
-        from backend.utils.aws_client import AWSConfigurationError, get_aws_credentials
-
         if not aws_scan_enabled():
             raise ScanConfigurationError(
                 "Live AWS scan is disabled on this deployment. Use synthetic mode for hosted demos, "
@@ -219,55 +226,36 @@ class ScanService:
             except ValueError as exc:
                 raise ScanConfigurationError(str(exc)) from exc
 
-        account: AWSAccount | None = None
-        if aws_account_id is not None:
-            account = db.scalar(
-                select(AWSAccount).where(
-                    AWSAccount.id == aws_account_id,
-                    AWSAccount.user_id == user_id,
-                )
-            )
-            if account is None:
-                raise LookupError("AWS account not found.")
-        else:
-            account = db.scalar(
-                select(AWSAccount)
-                .where(AWSAccount.user_id == user_id)
-                .order_by(AWSAccount.created_at.desc(), AWSAccount.id.desc())
-                .limit(1)
-            )
-
-        if account is not None:
-            try:
-                decrypted = account.decrypt_credentials(requesting_user_id=user_id)
-            except (CredentialTamperError, CredentialsEncryptionError) as exc:
-                raise ScanConfigurationError(
-                    "Stored AWS account credentials could not be decrypted. Please reconnect your AWS account."
-                ) from exc
-            resolved_region = cleaned_region or account.default_region or "ap-south-1"
-            return _ScanAWSContext(
-                access_key_id=decrypted.access_key_id,
-                secret_access_key=decrypted.secret_access_key,
-                session_token=decrypted.session_token,
-                region=resolved_region,
-                aws_account_id=account.aws_account_id,
-                connection_id=account.id,
-            )
-
-        try:
-            env_creds = get_aws_credentials(region=cleaned_region)
-        except (AWSConfigurationError, FileNotFoundError) as exc:
+        if aws_account_id is None:
             raise ScanConfigurationError(
-                "AWS credentials are required for live scans. Connect an AWS account or configure credentials in .env."
+                "Select a verified AWS account before starting a live scan."
+            )
+        account: AWSAccount | None = db.scalar(
+            select(AWSAccount).where(
+                AWSAccount.id == aws_account_id,
+                AWSAccount.user_id == user_id,
+            )
+        )
+        if account is None:
+            raise LookupError("AWS account not found.")
+        if account.verification_status != "verified":
+            raise ScanConfigurationError(
+                "The selected AWS account is not verified. Verify its credentials in Settings and try again."
+            )
+        try:
+            decrypted = account.decrypt_credentials(requesting_user_id=user_id)
+        except (CredentialTamperError, CredentialsEncryptionError) as exc:
+            raise ScanConfigurationError(
+                "Stored AWS account credentials could not be decrypted. Please reconnect your AWS account."
             ) from exc
-
+        resolved_region = cleaned_region or account.default_region or "ap-south-1"
         return _ScanAWSContext(
-            access_key_id=env_creds.access_key_id,
-            secret_access_key=env_creds.secret_access_key,
-            session_token=env_creds.session_token,
-            region=env_creds.region,
-            aws_account_id=None,
-            connection_id=None,
+            access_key_id=decrypted.access_key_id,
+            secret_access_key=decrypted.secret_access_key,
+            session_token=decrypted.session_token,
+            region=resolved_region,
+            aws_account_id=account.aws_account_id,
+            connection_id=account.id,
         )
 
     def _run_pipeline(
@@ -307,6 +295,10 @@ class ScanService:
         try:
             for index, (step_name, script_rel) in enumerate(pipeline_steps):
                 self._update_step(scan_id, user_id, index, step_name, "running", total)
+                logger.info(
+                    "Cloud scan %s — stage %d/%d started: %s",
+                    scan_id[:8], index + 1, total, step_name,
+                )
                 try:
                     if script_rel is None:
                         self._run_in_process_step(step_name, self._project_root, workspace)
@@ -331,6 +323,10 @@ class ScanService:
                     return
                 progress = int(((index + 1) / total) * 100)
                 self._update_step(scan_id, user_id, index, step_name, "completed", total, progress)
+                logger.info(
+                    "Cloud scan %s — stage %d/%d completed (%d%%): %s",
+                    scan_id[:8], index + 1, total, progress, step_name,
+                )
             try:
                 if mode == "aws" and aws_context is not None:
                     self._enrich_aws_scan_source(workspace, aws_context)
@@ -402,6 +398,10 @@ class ScanService:
 
         command = [PYTHON, "-u", str(script_path)]
         output_tail: list[str] = []
+        output_queue: queue.Queue[str | None] = queue.Queue()
+        timeout_seconds = self._stage_timeout_seconds()
+        started_at = time.monotonic()
+        last_activity_log = started_at
         with subprocess.Popen(
             command,
             cwd=self._project_root,
@@ -411,29 +411,87 @@ class ScanService:
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            start_new_session=os.name != "nt",
             env=env,
         ) as process:
-            if process.stdout is not None:
-                for line in process.stdout:
-                    output_tail.append(line.rstrip())
-                    if len(output_tail) > 20:
-                        output_tail.pop(0)
-                    match = _FORECAST_PROGRESS.search(line)
-                    if match and int(match.group(2)) > 0:
-                        completed, total = (int(value) for value in match.groups())
-                        fraction = min(1.0, completed / total)
-                        stage_progress = int(
-                            ((stage_index + fraction) / total_stages) * 100
+            def read_output() -> None:
+                try:
+                    if process.stdout is not None:
+                        for output_line in process.stdout:
+                            output_queue.put(output_line)
+                finally:
+                    output_queue.put(None)
+
+            reader = threading.Thread(target=read_output, daemon=True)
+            reader.start()
+            while True:
+                elapsed = time.monotonic() - started_at
+                if elapsed >= timeout_seconds:
+                    self._kill_process_tree(process)
+                    process.wait()
+                    raise TimeoutError(
+                        f"{step_name} exceeded its {timeout_seconds}-second stage timeout."
+                    )
+                try:
+                    line = output_queue.get(timeout=min(1.0, timeout_seconds - elapsed))
+                except queue.Empty:
+                    now = time.monotonic()
+                    if now - last_activity_log >= 30:
+                        logger.info(
+                            "Cloud scan %s — stage still running: %s (%.0f seconds elapsed)",
+                            scan_id[:8], step_name, now - started_at,
                         )
-                        self._update_scan_progress(
-                            scan_id, user_id, step_name, stage_progress
-                        )
+                        last_activity_log = now
+                    if process.poll() is not None:
+                        # The reader will enqueue its sentinel after draining remaining output.
+                        continue
+                    continue
+                if line is None:
+                    break
+                output_tail.append(line.rstrip())
+                if len(output_tail) > 20:
+                    output_tail.pop(0)
+                match = _FORECAST_PROGRESS.search(line)
+                if match is None:
+                    match = _AWS_METRICS_PROGRESS.search(line)
+                if match and int(match.group(2)) > 0:
+                    completed, total = (int(value) for value in match.groups())
+                    fraction = min(1.0, completed / total)
+                    stage_progress = int(((stage_index + fraction) / total_stages) * 100)
+                    self._update_scan_progress(scan_id, user_id, step_name, stage_progress)
+                    logger.info(
+                        "Cloud scan %s — %s progress %d/%d (%d%% overall)",
+                        scan_id[:8], step_name, completed, total, stage_progress,
+                    )
             return_code = process.wait()
+            reader.join(timeout=1)
 
         if return_code != 0:
             detail = "\n".join(output_tail).strip()
-            last_line = detail.splitlines()[-1] if detail else "Process exited with error"
-            raise RuntimeError(sanitize_aws_error_message(last_line))
+            safe_detail = sanitize_aws_error_message(detail) if detail else "Process exited with error"
+            raise RuntimeError(f"{step_name} process exited with code {return_code}: {safe_detail}")
+
+    @staticmethod
+    def _stage_timeout_seconds() -> int:
+        configured = os.getenv("FINOPS_PIPELINE_STAGE_TIMEOUT_SECONDS", "").strip()
+        if not configured:
+            return DEFAULT_PIPELINE_STAGE_TIMEOUT_SECONDS
+        try:
+            return max(30, int(configured))
+        except ValueError:
+            logger.warning("Invalid FINOPS_PIPELINE_STAGE_TIMEOUT_SECONDS; using default timeout")
+            return DEFAULT_PIPELINE_STAGE_TIMEOUT_SECONDS
+
+    @staticmethod
+    def _kill_process_tree(process: subprocess.Popen) -> None:
+        """Terminate the timed-out stage and any child process it started."""
+        try:
+            if os.name == "nt":
+                process.kill()
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
 
     def _update_scan_progress(
         self, scan_id: str, user_id: int, step_name: str, progress: int
@@ -515,7 +573,7 @@ class ScanService:
             scan.status = "failed"
             scan.error_message = error
             scan.message = "Scan failed"
-            scan.current_stage = None
+            scan.current_stage = stage.name if stage is not None else "Persisting scan results"
             scan.completed_at = datetime.now(timezone.utc)
             scan.updated_at = scan.completed_at
             db.commit()

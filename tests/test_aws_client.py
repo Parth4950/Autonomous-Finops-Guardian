@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from backend.utils.aws_client import AWSClientHelper, get_aws_credentials
 
@@ -27,10 +27,15 @@ class AWSClientCredentialTests(unittest.TestCase):
             helper.create_client("ec2")
 
         self.assertEqual(credentials.session_token, "temporary-session")
+        client_config = client.call_args.kwargs["config"]
+        self.assertEqual(client_config.connect_timeout, 5)
+        self.assertEqual(client_config.read_timeout, 30)
+        self.assertEqual(client_config.retries["mode"], "standard")
+        self.assertEqual(client_config.retries["max_attempts"], 3)
         client.assert_called_once_with(
             "ec2", aws_access_key_id="temporary-access",
             aws_secret_access_key="temporary-secret", region_name="us-east-1",
-            aws_session_token="temporary-session",
+            aws_session_token="temporary-session", config=ANY,
         )
 
     @patch("backend.utils.aws_client.load_dotenv")
@@ -49,7 +54,7 @@ class AWSClientCredentialTests(unittest.TestCase):
         self.assertIsNone(credentials.session_token)
         client.assert_called_once_with(
             "ec2", aws_access_key_id="standard-access",
-            aws_secret_access_key="standard-secret", region_name="us-west-2",
+            aws_secret_access_key="standard-secret", region_name="us-west-2", config=ANY,
         )
 
     @patch("backend.utils.aws_client.load_dotenv")

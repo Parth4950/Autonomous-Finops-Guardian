@@ -8,7 +8,7 @@ import type {
 } from "@/api/types";
 
 export interface StartScanOptions {
-  mode?: ScanMode;
+  mode: ScanMode;
   aws_account_id?: number | null;
   region?: string | null;
 }
@@ -20,7 +20,7 @@ export async function startCloudScan(
     typeof options === "string"
       ? { mode: options }
       : {
-          mode: options.mode ?? "synthetic",
+          mode: options.mode,
           ...(options.aws_account_id != null ? { aws_account_id: options.aws_account_id } : {}),
           ...(options.region ? { region: options.region } : {}),
         };

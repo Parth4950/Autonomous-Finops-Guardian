@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import threading
 import time
+import os
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -147,8 +148,66 @@ class ScanWorkspaceIsolationTests(unittest.TestCase):
             )
             self.assertEqual(scan.status, "failed")
             self.assertIn("synthetic stage failure", scan.error_message)
+            self.assertEqual(scan.current_stage, stages[0].name)
             self.assertEqual(stages[0].status, "failed")
+            self.assertIn("synthetic stage failure", stages[0].error_message)
             self.assertTrue(all(stage.status == "pending" for stage in stages[1:]))
+
+    def test_streamed_forecast_progress_updates_worker_database_state(self) -> None:
+        scan_id = "50000000-0000-4000-8000-000000000002"
+        with self.scan_db() as db:
+            db.add(Scan(
+                scan_id=scan_id,
+                user_id=1,
+                mode="aws",
+                status="running",
+                progress=25,
+                current_stage="Forecasting utilization",
+            ))
+            db.add(ScanStage(
+                user_id=1,
+                scan_id=scan_id,
+                stage_order=3,
+                name="Forecasting utilization",
+                status="running",
+            ))
+            db.commit()
+
+        script = self.tmp_path / "forecast-progress.py"
+        script.write_text("print('Forecast progress: 1 / 1', flush=True)\n", encoding="utf-8")
+        service = ScanService(project_root=self.tmp_path, session_factory=self.scan_db)
+        service._run_pipeline_subprocess(  # noqa: SLF001 - exercises real streamed worker output
+            scan_id=scan_id,
+            user_id=1,
+            stage_index=2,
+            total_stages=8,
+            step_name="Forecasting utilization",
+            script_path=script,
+            env=os.environ.copy(),
+        )
+
+        with self.scan_db() as db:
+            scan = db.get(Scan, scan_id)
+            self.assertEqual(scan.progress, 37)
+            self.assertEqual(scan.status, "running")
+            self.assertEqual(scan.current_stage, "Forecasting utilization")
+
+    def test_timed_out_stage_is_terminated_and_names_the_stage(self) -> None:
+        script = self.tmp_path / "hung-stage.py"
+        script.write_text("import time\ntime.sleep(5)\n", encoding="utf-8")
+        service = ScanService(project_root=self.tmp_path, session_factory=self.scan_db)
+
+        with patch.object(ScanService, "_stage_timeout_seconds", return_value=-1):
+            with self.assertRaisesRegex(TimeoutError, "Forecasting utilization"):
+                service._run_pipeline_subprocess(  # noqa: SLF001 - verifies worker timeout behavior
+                    scan_id="50000000-0000-4000-8000-000000000002",
+                    user_id=1,
+                    stage_index=2,
+                    total_stages=8,
+                    step_name="Forecasting utilization",
+                    script_path=script,
+                    env=os.environ.copy(),
+                )
 
     def test_scan_state_is_scoped_to_requesting_user(self) -> None:
         with patch(

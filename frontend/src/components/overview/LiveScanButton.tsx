@@ -12,75 +12,102 @@ import { useCloudScan } from "@/hooks/useCloudScan";
 import type { ScanMode } from "@/api/types";
 import { AWS_REGIONS } from "@/pages/Settings";
 import { cn } from "@/lib/utils";
-import { Cloud, FlaskConical, KeyRound, Loader2, LogIn, Radar } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Cloud,
+  FlaskConical,
+  KeyRound,
+  Loader2,
+  LogIn,
+  Radar,
+  XCircle,
+} from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ENV_DEFAULT_ACCOUNT = "__env_default__";
-
 export function LiveScanButton() {
   const navigate = useNavigate();
+  const toast = useToast();
   const { user, isSimulationMode, exitSimulationMode } = useAuth();
   const isGuestSimulation = isSimulationMode && !user;
   const { data: scanSource } = useScanSource();
   const { data: health } = useHealth();
   const { data: awsAccounts } = useAwsAccounts(!isGuestSimulation);
   const awsScanEnabled = (health?.aws_scan_enabled ?? true) && !isGuestSimulation;
-  const [scanMode, setScanMode] = useState<ScanMode>("synthetic");
-  const [selectedAccountId, setSelectedAccountId] = useState<string>(ENV_DEFAULT_ACCOUNT);
+  const [scanMode, setScanMode] = useState<ScanMode>("aws");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("us-east-1");
-  const { startScan, isScanning, progress, currentStep, scanMode: activeScanMode } =
-    useCloudScan();
+  const {
+    startScan,
+    isScanning,
+    progress,
+    currentStep,
+    steps,
+    scanError,
+    scanStatus,
+    scanMode: activeScanMode,
+  } = useCloudScan();
+  const verifiedAccounts = (awsAccounts ?? []).filter(
+    (account) => account.verification_status === "verified"
+  );
+  const selectedAccount = verifiedAccounts.find(
+    (account) => String(account.id) === selectedAccountId
+  );
 
   useEffect(() => {
     if (!awsScanEnabled) {
       setScanMode("synthetic");
       return;
     }
-    if (scanSource?.mode === "aws" || scanSource?.mode === "synthetic") {
-      setScanMode(scanSource.mode);
-    }
     if (scanSource?.region) {
       setSelectedRegion(scanSource.region);
     }
-  }, [awsScanEnabled, scanSource?.mode, scanSource?.region]);
+  }, [awsScanEnabled, scanSource?.region]);
 
   useEffect(() => {
-    if (!awsAccounts || awsAccounts.length === 0) {
-      if (selectedAccountId !== ENV_DEFAULT_ACCOUNT) {
-        setSelectedAccountId(ENV_DEFAULT_ACCOUNT);
-      }
+    if (!awsAccounts) {
       return;
     }
-    const stillExists = awsAccounts.some((acc) => String(acc.id) === selectedAccountId);
-    if (selectedAccountId === ENV_DEFAULT_ACCOUNT || !stillExists) {
-      const preferred =
-        awsAccounts.find((acc) => acc.verification_status === "verified") ?? awsAccounts[0];
-      if (preferred) {
-        setSelectedAccountId(String(preferred.id));
-        setSelectedRegion(preferred.default_region);
-      }
+    const stillVerified = verifiedAccounts.some((acc) => String(acc.id) === selectedAccountId);
+    if (!stillVerified) {
+      const preferred = verifiedAccounts[0];
+      setSelectedAccountId(preferred ? String(preferred.id) : "");
+      if (preferred) setSelectedRegion(preferred.default_region);
     }
-  }, [awsAccounts, selectedAccountId]);
+  }, [awsAccounts, selectedAccountId, verifiedAccounts]);
 
   const handleAccountChange = (value: string) => {
     setSelectedAccountId(value);
-    const matching = awsAccounts?.find((acc) => String(acc.id) === value);
+    const matching = verifiedAccounts.find((acc) => String(acc.id) === value);
     if (matching?.default_region) {
       setSelectedRegion(matching.default_region);
     }
   };
 
   const handleStartScan = () => {
-    if (scanMode === "aws" && awsScanEnabled) {
+    if (scanMode === "aws") {
+      if (!awsScanEnabled) {
+        toast.error("Live AWS scanning unavailable", "This deployment has disabled AWS scanning.");
+        return;
+      }
+      if (!selectedAccount) {
+        toast.error(
+          "Verified AWS account required",
+          "Connect and verify an AWS account in Settings before starting a live scan."
+        );
+        navigate("/settings?tab=aws");
+        return;
+      }
       startScan({
         mode: "aws",
-        aws_account_id:
-          selectedAccountId !== ENV_DEFAULT_ACCOUNT ? Number(selectedAccountId) : null,
+        aws_account_id: selectedAccount.id,
         region: selectedRegion,
       });
       return;
     }
+    // Synthetic runs require the user to explicitly choose Synthetic above.
     startScan({ mode: "synthetic" });
   };
 
@@ -147,20 +174,22 @@ export function LiveScanButton() {
             <Select
               value={selectedAccountId}
               onValueChange={handleAccountChange}
-              disabled={isScanning}
+              disabled={isScanning || verifiedAccounts.length === 0}
             >
               <SelectTrigger className="h-9 w-[210px]" title="Select connected AWS account">
                 <SelectValue placeholder="AWS Account" />
               </SelectTrigger>
               <SelectContent>
-                {awsAccounts?.map((acc) => (
+                {verifiedAccounts.map((acc) => (
                   <SelectItem key={acc.id} value={String(acc.id)}>
                     {acc.display_name} ({acc.aws_account_id ?? acc.access_key_id_masked})
                   </SelectItem>
                 ))}
-                <SelectItem value={ENV_DEFAULT_ACCOUNT}>
-                  Host Environment Credentials
-                </SelectItem>
+                {verifiedAccounts.length === 0 && (
+                  <SelectItem value="__no_verified_account__" disabled>
+                    No verified AWS account
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
 
@@ -196,13 +225,23 @@ export function LiveScanButton() {
           </>
         )}
 
-        <Button onClick={handleStartScan} disabled={isScanning} className="gap-2">
+        <Button
+          onClick={handleStartScan}
+          disabled={isScanning || (scanMode === "aws" && (!awsScanEnabled || !selectedAccount))}
+          className="gap-2"
+        >
           {isScanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radar className="h-4 w-4" />}
-          {isScanning ? "Scanning…" : "Run Cloud Scan"}
+          {isScanning ? "Scanning…" : scanMode === "aws" ? "Run Live AWS Scan" : "Run Synthetic Scan"}
         </Button>
       </div>
 
-      {isScanning && (
+      {awsScanEnabled && scanMode === "aws" && !selectedAccount && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          Connect and verify an AWS account in Settings to enable live scans.
+        </p>
+      )}
+
+      {(isScanning || scanStatus === "failed" || scanStatus === "completed") && steps.length > 0 && (
         <div className="w-full min-w-[260px] space-y-1.5 rounded-lg border border-border bg-card/80 px-3 py-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
@@ -215,14 +254,43 @@ export function LiveScanButton() {
           <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
             <div
               className={cn(
-                "h-full rounded-full bg-primary transition-all duration-500",
-                progress < 100 && "animate-pulse"
+                "h-full rounded-full transition-all duration-500",
+                scanStatus === "failed" ? "bg-red-500" : "bg-primary",
+                isScanning && "animate-pulse"
               )}
-              style={{ width: `${Math.max(progress, 8)}%` }}
+              style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
           {currentStep && (
             <p className="truncate text-[11px] text-muted-foreground">{currentStep}</p>
+          )}
+          {steps.length > 0 && (
+            <ol className="grid grid-cols-2 gap-x-3 gap-y-1 border-t border-border pt-2 text-[10px]">
+              {steps.map((step) => {
+                const Icon = step.status === "completed"
+                  ? CheckCircle2
+                  : step.status === "failed"
+                    ? XCircle
+                    : step.status === "running"
+                      ? Loader2
+                      : Circle;
+                return (
+                  <li key={step.name} className="flex min-w-0 items-center gap-1.5" title={step.error ?? step.name}>
+                    <Icon className={cn(
+                      "h-3 w-3 shrink-0",
+                      step.status === "completed" && "text-emerald-500",
+                      step.status === "failed" && "text-red-500",
+                      step.status === "running" && "animate-spin text-primary",
+                      step.status === "pending" && "text-muted-foreground/50"
+                    )} />
+                    <span className="truncate text-muted-foreground">{step.name}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          {scanStatus === "failed" && scanError && (
+            <p className="text-[11px] text-red-500" role="alert">{scanError}</p>
           )}
         </div>
       )}

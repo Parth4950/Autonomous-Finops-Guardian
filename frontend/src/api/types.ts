@@ -292,6 +292,7 @@ export interface ScanStartResponse {
 export interface ScanStepProgress {
   name: string;
   status: string;
+  error?: string | null;
 }
 
 export interface ScanStatusResponse {

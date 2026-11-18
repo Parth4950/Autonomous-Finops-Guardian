@@ -160,7 +160,7 @@ EXECUTION_MODE=simulation
 ALLOW_AWS_SCAN=false
 ```
 
-Keep actual values only in your local, ignored `.env`; `.env.example` contains blank placeholders. AWS keys are optional for synthetic scans. For AWS Academy Learner Lab, provide the access key, secret key, session token, and region together. The Compose configuration passes these variables only to the backend and mounts the root `.env` read-only. Do not add credentials to source, images, Kubernetes manifests, or GitHub Actions. `ALLOW_AWS_SCAN=false` blocks live discovery by default; enabling read-only scans is a separate deliberate configuration. `EXECUTION_MODE=simulation` keeps remediation simulated. `GEMINI_API_KEY` is optional; agents use deterministic explanations when it is absent.
+Keep actual values only in your local, ignored `.env`; `.env.example` contains blank placeholders. AWS keys are optional for synthetic scans and standalone CLI agents. Dashboard live scans use an AWS account connected and verified in Settings; credentials remain encrypted at rest and each scan uses the explicitly selected account. For AWS Academy Learner Lab, provide the access key, secret key, session token, and region together when connecting the account. Compose passes backend environment variables only to the backend and mounts the root `.env` read-only. Do not add credentials to source, images, Kubernetes manifests, or GitHub Actions. `ALLOW_AWS_SCAN=false` blocks live discovery by default; enabling read-only scans is a separate deliberate configuration. `EXECUTION_MODE=simulation` keeps remediation simulated. `GEMINI_API_KEY` is optional; agents use deterministic explanations when it is absent.
 
 ### 3. Install frontend
 
@@ -374,7 +374,7 @@ Compose defaults to `EXECUTION_MODE=simulation` and `ALLOW_AWS_SCAN=false`. The 
 
 ### AWS configuration
 
-For Learner Lab temporary credentials, set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_REGION` in local `.env`. For standard long-lived style access keys, omit `AWS_SESSION_TOKEN`. The app does not log credentials. AWS scans require explicitly allowing them; keep `ALLOW_AWS_SCAN=false` for synthetic-only runs. AWS permissions should be read-only for scans. No AWS write/remediation permissions are required by the DevOps workflows.
+For dashboard scans, connect and verify credentials in **Settings → AWS Accounts**, then choose that verified account in Overview. Learner Lab credentials require the access key, secret key, session token, and region; standard long-lived keys omit the session token. `.env` credentials remain available to standalone CLI agents, not as a fallback for dashboard scans. Set `ALLOW_AWS_SCAN=true` to enable read-only scans; keep it `false` for synthetic-only runs. AWS permissions should be read-only. No AWS write/remediation permissions are required by the scan workflow.
 
 ### Kubernetes
 

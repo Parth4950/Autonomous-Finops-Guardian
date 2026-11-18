@@ -13,6 +13,7 @@ ScanMode = Literal["synthetic", "aws"]
 class ScanStepProgress(BaseModel):
     name: str
     status: str  # pending | running | completed | failed
+    error: str | None = None
 
 
 class ScanStartRequest(BaseModel):
