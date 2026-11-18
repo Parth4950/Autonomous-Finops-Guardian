@@ -11,7 +11,7 @@ from backend.auth.security import token_hash
 from backend.config import cors_allow_origins
 from backend.db.session import get_db
 from backend.models.auth import User, UserSession
-from backend.models.finops import Scan
+from backend.models.finops import FinOpsReport, Scan, ScanResourceSnapshot
 from backend.models.paths import PROJECT_ROOT
 from backend.services.scan_output_persistence import persist_scan_outputs
 
@@ -54,13 +54,44 @@ def _get_or_seed_simulation_user(db: Session) -> User:
         db.flush()
         created_or_seeded = True
 
-    has_completed_scan = db.scalar(
-        select(Scan.scan_id)
+    latest_completed_scan = db.scalar(
+        select(Scan)
         .where(Scan.user_id == sim_user.id, Scan.status == "completed")
+        .order_by(Scan.created_at.desc())
         .limit(1)
     )
-    if has_completed_scan is None and (PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv").is_file():
+    ready_report_types = {
+        "risk_assessments",
+        "audit_results",
+        "executive_report",
+        "forecast_dashboard",
+        "forecast_results",
+        "anomalies",
+        "plans",
+        "scan_source",
+    }
+    if latest_completed_scan is not None:
+        snapshot_count = db.scalar(
+            select(ScanResourceSnapshot.snapshot_id)
+            .where(
+                ScanResourceSnapshot.user_id == sim_user.id,
+                ScanResourceSnapshot.scan_id == latest_completed_scan.scan_id,
+            )
+            .limit(1)
+        )
+        report_types = set(db.scalars(
+            select(FinOpsReport.report_type).where(
+                FinOpsReport.user_id == sim_user.id,
+                FinOpsReport.scan_id == latest_completed_scan.scan_id,
+            )
+        ).all())
+        simulation_data_ready = snapshot_count is not None and ready_report_types.issubset(report_types)
+    else:
+        simulation_data_ready = False
+
+    if not simulation_data_ready and (PROJECT_ROOT / "synthetic_data" / "cloud_resources.csv").is_file():
         now = datetime.now(timezone.utc)
+        # Keep older incomplete scan records intact; write a fresh, complete scan instead.
         existing_seed = db.get(Scan, SIMULATION_SEED_SCAN_ID)
         scan_id = SIMULATION_SEED_SCAN_ID if existing_seed is None else str(uuid.uuid4())
         seed_scan = Scan(

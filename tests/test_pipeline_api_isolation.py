@@ -12,6 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.api.deps import get_execution_service
+from backend.auth.dependencies import SIMULATION_SEED_SCAN_ID, SIMULATION_USERNAME
 from backend.auth.dependencies import get_db as auth_get_db
 from backend.auth.security import token_hash
 from backend.db.base import Base
@@ -193,6 +194,27 @@ class PipelineApiIsolationTests(unittest.TestCase):
         self.assertNotIn("resource-2", client.get("/executions").text)
 
     def test_simulation_mode_works_without_auth_and_never_mixes_user_data(self):
+        # A legacy completed demo scan without owned rows must not block self-healing.
+        with self.factory() as db:
+            sim_user = User(
+                full_name="Simulation Mode Demo",
+                username=SIMULATION_USERNAME,
+                email="simulation@finops.local",
+                password_hash="!simulation-disabled!",
+                is_active=False,
+            )
+            db.add(sim_user)
+            db.flush()
+            db.add(Scan(
+                scan_id=SIMULATION_SEED_SCAN_ID,
+                user_id=sim_user.id,
+                mode="synthetic",
+                status="completed",
+                progress=100,
+                message="legacy empty seed",
+            ))
+            db.commit()
+
         sim_client = TestClient(app)
         try:
             sim_headers = {"X-FinOps-Mode": "simulation"}
@@ -201,6 +223,7 @@ class PipelineApiIsolationTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200, (path, response.text))
                 self.assertNotIn("resource-1", response.text)
                 self.assertNotIn("resource-2", response.text)
+            self.assertGreater(sim_client.get("/resources", headers=sim_headers).json()["count"], 0)
 
             # Simulation mode cannot access account-only endpoints or trigger live AWS scans
             self.assertEqual(sim_client.get("/aws/accounts", headers=sim_headers).status_code, 401)

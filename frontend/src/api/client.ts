@@ -1,13 +1,9 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "");
-const isDev = import.meta.env.DEV;
 
-/** A production build must receive its backend URL via VITE_API_BASE_URL. */
+/** Use the deployed API directly when configured; Vercel and Vite proxy /api otherwise. */
 export const API_BASE_URL = rawBaseUrl ?? "/api";
-if (!rawBaseUrl && !isDev) {
-  console.error("VITE_API_BASE_URL is not configured; production API calls will use /api and require a same-origin proxy.");
-}
 
 const SIMULATION_MODE_STORAGE_KEY = "finops_simulation_mode";
 

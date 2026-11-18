@@ -59,7 +59,9 @@ Browser → Vercel (static React) → Render (FastAPI) → CSV/JSON in repo
 
 | Variable | Value |
 |----------|--------|
-| `VITE_API_BASE_URL` | `https://finops-api.onrender.com` *(your Render URL, no trailing slash)* |
+| `VITE_API_BASE_URL` | `https://finops-api.onrender.com` *(optional; use for a different Render URL, no trailing slash)* |
+
+Without this variable, Vercel proxies `/api/*` to the repository's `finops-api.onrender.com` service. If your Render service has a different hostname, set `VITE_API_BASE_URL` and redeploy the frontend.
 
 5. Deploy and copy the Vercel URL, e.g. `https://finops-guardian.vercel.app`.
 
