@@ -96,6 +96,16 @@ app.include_router(planner.router)
 app.include_router(approvals.router)
 app.include_router(execution.router)
 
+# Keep CORS outside Starlette's ServerErrorMiddleware so even unhandled 500
+# responses (including scan-status failures) carry the configured CORS headers.
+asgi_app = CORSMiddleware(
+    app,
+    allow_origins=cors_allow_origins(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-CSRF-Token", "X-FinOps-Mode"],
+)
+
 
 @app.exception_handler(DataNotFoundError)
 async def data_not_found_handler(_: Request, exc: DataNotFoundError) -> JSONResponse:
