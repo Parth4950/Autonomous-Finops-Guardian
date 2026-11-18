@@ -35,12 +35,11 @@ export function LiveScanButton() {
   const { data: scanSource } = useScanSource();
   const { data: health } = useHealth();
   const { data: awsAccounts } = useAwsAccounts(!isGuestSimulation);
-  const awsScanEnabled = (health?.aws_scan_enabled ?? true) && !isGuestSimulation;
-  // Keep the user's selected mode separate from deployment capability. If the
-  // API temporarily reports AWS scans disabled during startup, the control is
-  // forced to synthetic; when health recovers, restore the user's selection.
-  const [selectedScanMode, setSelectedScanMode] = useState<ScanMode>("aws");
-  const scanMode: ScanMode = awsScanEnabled ? selectedScanMode : "synthetic";
+  const awsScanEnabled = health?.aws_scan_enabled === true && !isGuestSimulation;
+  // Demo mode is the safe initial selection. Keep mode selection independent
+  // from API capability so a live scan can never silently become synthetic.
+  const [selectedScanMode, setSelectedScanMode] = useState<ScanMode>("synthetic");
+  const scanMode = selectedScanMode;
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("us-east-1");
   const {
@@ -138,7 +137,7 @@ export function LiveScanButton() {
               Sign in for Live AWS
             </Button>
           </>
-        ) : awsScanEnabled ? (
+        ) : (
           <Select
             value={scanMode}
             onValueChange={(value) => setSelectedScanMode(value as ScanMode)}
@@ -154,19 +153,14 @@ export function LiveScanButton() {
                   Synthetic
                 </span>
               </SelectItem>
-              <SelectItem value="aws">
+              <SelectItem value="aws" disabled={!awsScanEnabled}>
                 <span className="flex items-center gap-2">
                   <Cloud className="h-3.5 w-3.5" />
-                  Live AWS
+                  {awsScanEnabled ? "Live AWS" : "Live AWS (unavailable)"}
                 </span>
               </SelectItem>
             </SelectContent>
           </Select>
-        ) : (
-          <span className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-xs text-muted-foreground">
-            <FlaskConical className="mr-2 h-3.5 w-3.5" />
-            Synthetic only (hosted)
-          </span>
         )}
 
         {awsScanEnabled && scanMode === "aws" && (
@@ -235,6 +229,12 @@ export function LiveScanButton() {
         </Button>
       </div>
 
+      {scanMode === "aws" && !awsScanEnabled && (
+        <p className="text-xs text-red-500" role="alert">
+          Live AWS scanning is unavailable because the API has not enabled it. No synthetic scan will be started.
+        </p>
+      )}
+
       {awsScanEnabled && scanMode === "aws" && !selectedAccount && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
           Connect and verify an AWS account in Settings to enable live scans.
@@ -283,7 +283,9 @@ export function LiveScanButton() {
                       step.status === "running" && "animate-spin text-primary",
                       step.status === "pending" && "text-muted-foreground/50"
                     )} />
-                    <span className="truncate text-muted-foreground">{step.name}</span>
+                    <span className="truncate text-muted-foreground">
+                      {step.error ? `${step.name}: ${step.error}` : step.name}
+                    </span>
                   </li>
                 );
               })}

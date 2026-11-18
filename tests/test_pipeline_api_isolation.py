@@ -229,6 +229,16 @@ class PipelineApiIsolationTests(unittest.TestCase):
             self.assertEqual(sim_client.get("/aws/accounts", headers=sim_headers).status_code, 401)
             sim_client.get("/auth/csrf")
             csrf = sim_client.cookies.get("finops_csrf")
+            missing_scan_mode = sim_client.post(
+                "/scan/start",
+                json={},
+                headers={
+                    "X-FinOps-Mode": "simulation",
+                    "X-CSRF-Token": csrf,
+                    "Origin": "http://localhost:5173",
+                },
+            )
+            self.assertEqual(missing_scan_mode.status_code, 422, missing_scan_mode.text)
             aws_scan = sim_client.post(
                 "/scan/start",
                 json={"mode": "aws"},

@@ -14,7 +14,7 @@ export interface StartScanOptions {
 }
 
 export async function startCloudScan(
-  options: ScanMode | StartScanOptions = "synthetic"
+  options: ScanMode | StartScanOptions
 ): Promise<ScanStartResponse> {
   const payload: ScanStartRequest =
     typeof options === "string"

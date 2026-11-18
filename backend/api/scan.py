@@ -23,7 +23,7 @@ router = APIRouter(tags=["Scan"])
     summary="Start a cloud FinOps scan",
 )
 def start_scan(
-    request: ScanStartRequest = ScanStartRequest(),
+    request: ScanStartRequest,
     service: ScanService = Depends(get_scan_service),
     user: User = Depends(current_user),
 ) -> ScanStartResponse:
@@ -86,7 +86,10 @@ def get_scan_status(
         progress=state.progress,
         scan_mode=state.scan_mode,
         current_step=state.current_step,
-        steps=[ScanStepProgress(name=s["name"], status=s["status"]) for s in state.steps],
+        steps=[
+            ScanStepProgress(name=s["name"], status=s["status"], error=s.get("error"))
+            for s in state.steps
+        ],
         message=state.message,
         error=state.error,
     )

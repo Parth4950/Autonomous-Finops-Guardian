@@ -17,10 +17,7 @@ class ScanStepProgress(BaseModel):
 
 
 class ScanStartRequest(BaseModel):
-    mode: ScanMode = Field(
-        default="synthetic",
-        description="Discovery mode: synthetic (default) or live AWS via Scout Agent.",
-    )
+    mode: ScanMode = Field(description="Discovery mode: synthetic or live AWS via Scout Agent.")
     aws_account_id: int | None = Field(
         default=None,
         description="Connected AWSAccount ID owned by the authenticated user.",

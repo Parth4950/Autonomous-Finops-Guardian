@@ -217,7 +217,7 @@ function AwsAccountsSection() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const { data: accounts, isLoading, isError, error, refetch } = useAwsAccounts();
-  const { startScanAsync, isScanning } = useCloudScan();
+  const { isScanning } = useCloudScan();
 
   // Connect form state
   const [displayName, setDisplayName] = useState("");
@@ -295,15 +295,6 @@ function AwsAccountsSection() {
           "Credentials verified",
           `${updated.display_name} verified against AWS STS (${updated.aws_account_id ?? "account"}).`
         );
-        try {
-          await startScanAsync({
-            mode: "aws",
-            aws_account_id: updated.id,
-            region: updated.default_region,
-          });
-        } catch {
-          // useCloudScan reports the sanitized scan-start error.
-        }
       } else {
         toast.error(
           `Verification ${updated.verification_status}`,
@@ -317,32 +308,14 @@ function AwsAccountsSection() {
     }
   };
 
-  const handleRefreshAndScan = async () => {
+  const handleRefreshAccounts = async () => {
     setRefreshing(true);
     try {
       const refreshed = await refetch();
       if (refreshed.error) throw refreshed.error;
-      const verifiedAccount = refreshed.data?.find(
-        (account) => account.verification_status === "verified"
-      );
-      if (!verifiedAccount) {
-        toast.error(
-          "No verified AWS account",
-          "Verify an AWS account before starting a live scan."
-        );
-        return;
-      }
-      try {
-        await startScanAsync({
-          mode: "aws",
-          aws_account_id: verifiedAccount.id,
-          region: verifiedAccount.default_region,
-        });
-      } catch {
-        // useCloudScan reports the sanitized scan-start error.
-      }
+      toast.success("AWS accounts refreshed", "Account verification status is up to date.");
     } catch (err) {
-      toast.error("Refresh or scan failed", extractErrorMessage(err));
+      toast.error("Refresh failed", extractErrorMessage(err));
     } finally {
       setRefreshing(false);
     }
@@ -565,12 +538,12 @@ function AwsAccountsSection() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => void handleRefreshAndScan()}
-              disabled={isLoading || refreshing || isScanning}
-              title="Refresh AWS account status and start a fresh scan with the most recently connected verified account"
+              onClick={() => void handleRefreshAccounts()}
+              disabled={isLoading || refreshing}
+              title="Refresh AWS account status"
             >
               <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", (isLoading || refreshing) && "animate-spin")} />
-              {refreshing ? "Refreshing & Scanning…" : "Refresh"}
+              {refreshing ? "Refreshing…" : "Refresh"}
             </Button>
           </CardHeader>
           <CardContent>

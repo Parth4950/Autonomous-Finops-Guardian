@@ -28,6 +28,7 @@ export function useCloudScan() {
   const toast = useToast();
   const { user } = useAuth();
   const previousStatusRef = useRef<string | undefined>(undefined);
+  const startRequestRef = useRef(false);
 
   const statusQuery = useQuery({
     queryKey: queryKeys.scanStatus,
@@ -53,6 +54,9 @@ export function useCloudScan() {
         return;
       }
       toast.error("Scan Failed", error.message);
+    },
+    onSettled: () => {
+      startRequestRef.current = false;
     },
   });
 
@@ -91,10 +95,11 @@ export function useCloudScan() {
       : startMutation.variables?.mode ?? null;
 
   return {
-    startScan: (options: ScanMode | StartScanOptions = "synthetic") =>
-      startMutation.mutate(options),
-    startScanAsync: (options: ScanMode | StartScanOptions) =>
-      startMutation.mutateAsync(options),
+    startScan: (options: ScanMode | StartScanOptions) => {
+      if (startRequestRef.current || isScanning || startMutation.isPending) return;
+      startRequestRef.current = true;
+      startMutation.mutate(options);
+    },
     isScanning: isScanning || startMutation.isPending,
     progress: startMutation.isPending ? 0 : statusQuery.data?.progress ?? 0,
     currentStep: startMutation.isPending ? undefined : statusQuery.data?.current_step,
