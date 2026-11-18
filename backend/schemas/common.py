@@ -16,6 +16,7 @@ class HealthResponse(BaseModel):
     deployment: Literal["local", "hosted"] = "local"
     aws_scan_enabled: bool = True
     execution_mode: str = "simulation"
+    revision: str | None = None
 
 
 class MessageResponse(BaseModel):

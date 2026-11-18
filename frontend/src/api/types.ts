@@ -10,6 +10,7 @@ export interface HealthResponse {
   deployment?: "local" | "hosted";
   aws_scan_enabled?: boolean;
   execution_mode?: string;
+  revision?: string;
 }
 
 export interface ResourceItem {

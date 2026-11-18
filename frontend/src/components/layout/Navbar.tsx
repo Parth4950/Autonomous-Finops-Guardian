@@ -51,7 +51,15 @@ export function Navbar({ onMenuClick, title = "Dashboard" }: NavbarProps) {
             />
             {statusLabel}
             {lastChecked}
-            <span className="hidden sm:inline"> · Simulation mode</span>
+            <span className="hidden sm:inline">
+              {isSimulationMode && !user
+                ? " · Simulation mode"
+                : data?.aws_scan_enabled === false
+                  ? " · Hosted synthetic mode"
+                  : data?.aws_scan_enabled === true
+                    ? " · Live AWS enabled"
+                    : ""}
+            </span>
           </p>
         </div>
       </div>

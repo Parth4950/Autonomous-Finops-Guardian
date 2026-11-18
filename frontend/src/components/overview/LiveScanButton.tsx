@@ -36,7 +36,11 @@ export function LiveScanButton() {
   const { data: health } = useHealth();
   const { data: awsAccounts } = useAwsAccounts(!isGuestSimulation);
   const awsScanEnabled = (health?.aws_scan_enabled ?? true) && !isGuestSimulation;
-  const [scanMode, setScanMode] = useState<ScanMode>("aws");
+  // Keep the user's selected mode separate from deployment capability. If the
+  // API temporarily reports AWS scans disabled during startup, the control is
+  // forced to synthetic; when health recovers, restore the user's selection.
+  const [selectedScanMode, setSelectedScanMode] = useState<ScanMode>("aws");
+  const scanMode: ScanMode = awsScanEnabled ? selectedScanMode : "synthetic";
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("us-east-1");
   const {
@@ -57,14 +61,10 @@ export function LiveScanButton() {
   );
 
   useEffect(() => {
-    if (!awsScanEnabled) {
-      setScanMode("synthetic");
-      return;
-    }
     if (scanSource?.region) {
       setSelectedRegion(scanSource.region);
     }
-  }, [awsScanEnabled, scanSource?.region]);
+  }, [scanSource?.region]);
 
   useEffect(() => {
     if (!awsAccounts) {
@@ -141,7 +141,7 @@ export function LiveScanButton() {
         ) : awsScanEnabled ? (
           <Select
             value={scanMode}
-            onValueChange={(value) => setScanMode(value as ScanMode)}
+            onValueChange={(value) => setSelectedScanMode(value as ScanMode)}
             disabled={isScanning}
           >
             <SelectTrigger className="h-9 w-[155px]">

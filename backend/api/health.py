@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter
 
 from backend.config import aws_scan_enabled, execution_mode, is_hosted_deployment
@@ -18,4 +20,5 @@ def health_check() -> HealthResponse:
         deployment="hosted" if is_hosted_deployment() else "local",
         aws_scan_enabled=aws_scan_enabled(),
         execution_mode=execution_mode(),
+        revision=(os.getenv("RENDER_GIT_COMMIT") or os.getenv("GIT_COMMIT") or "")[:12] or None,
     )

@@ -18,7 +18,7 @@ services:
       - key: MPLBACKEND
         value: Agg
       - key: CORS_ALLOW_ORIGINS
-        value: https://finops-guardian.vercel.app
+        value: https://autonomous-finops-guardian.vercel.app,https://finops-guardian.vercel.app
       - key: DATABASE_URL
         sync: false
       - key: AUTH_SECRET_KEY

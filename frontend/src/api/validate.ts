@@ -49,6 +49,7 @@ export function validateHealthResponse(data: unknown): {
   deployment?: "local" | "hosted";
   aws_scan_enabled?: boolean;
   execution_mode?: string;
+  revision?: string;
 } {
   const payload = validateObjectResponse<{ status: string }>(data, "health", ["status"]);
   const record = data as Record<string, unknown>;
@@ -62,5 +63,6 @@ export function validateHealthResponse(data: unknown): {
       typeof record.aws_scan_enabled === "boolean" ? record.aws_scan_enabled : undefined,
     execution_mode:
       typeof record.execution_mode === "string" ? record.execution_mode : undefined,
+    revision: typeof record.revision === "string" ? record.revision : undefined,
   };
 }
