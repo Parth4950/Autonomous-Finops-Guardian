@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 _FORECAST_PROGRESS = re.compile(r"Forecast progress: (\d+) / (\d+)")
 _AWS_METRICS_PROGRESS = re.compile(r"Collecting CloudWatch metrics \((\d+)\s*/\s*(\d+)\)")
 DEFAULT_PIPELINE_STAGE_TIMEOUT_SECONDS = 900
+SCAN_WORKER_HEARTBEAT_SECONDS = 20
+STALE_SCAN_WORKER_SECONDS = 90
 
 PYTHON = sys.executable
 ScanMode = Literal["synthetic", "aws"]
@@ -175,11 +177,45 @@ class ScanService:
             return state
 
     def get_status(self, user_id: int) -> ScanState | None:
+        stale_scan: tuple[str, int | None] | None = None
         with self._session_factory() as db:
             row = db.scalar(
                 select(Scan).where(Scan.user_id == user_id).order_by(Scan.created_at.desc()).limit(1)
             )
-            return self._state_from_row(db, row) if row else None
+            if row is None:
+                return None
+            if row.status in {"pending", "running"} and self._scan_is_stale(row):
+                active_stage = db.scalar(
+                    select(ScanStage).where(
+                        ScanStage.scan_id == row.scan_id,
+                        ScanStage.status == "running",
+                    ).limit(1)
+                )
+                stale_scan = (row.scan_id, active_stage.stage_order - 1 if active_stage else None)
+            else:
+                return self._state_from_row(db, row)
+
+        if stale_scan is not None:
+            scan_id, stage_index = stale_scan
+            self._fail_scan(
+                scan_id,
+                user_id,
+                "The scan worker stopped reporting progress for over "
+                f"{STALE_SCAN_WORKER_SECONDS} seconds. A deployment or worker restart may have "
+                "interrupted this scan. Start a new scan to retry.",
+                stage_index,
+            )
+            logger.warning("Recovered orphaned scan %s for user %s", scan_id[:8], user_id)
+            return self._read_state(scan_id, user_id)
+        return None
+
+    @staticmethod
+    def _scan_is_stale(row: Scan) -> bool:
+        updated_at = row.updated_at
+        if updated_at.tzinfo is None:
+            updated_at = updated_at.replace(tzinfo=timezone.utc)
+        age = (datetime.now(timezone.utc) - updated_at).total_seconds()
+        return age > STALE_SCAN_WORKER_SECONDS
 
     def _read_state(self, scan_id: str, user_id: int) -> ScanState:
         with self._session_factory() as db:
@@ -424,6 +460,7 @@ class ScanService:
 
             reader = threading.Thread(target=read_output, daemon=True)
             reader.start()
+            last_heartbeat = started_at
             while True:
                 elapsed = time.monotonic() - started_at
                 if elapsed >= timeout_seconds:
@@ -432,6 +469,10 @@ class ScanService:
                     raise TimeoutError(
                         f"{step_name} exceeded its {timeout_seconds}-second stage timeout."
                     )
+                now = time.monotonic()
+                if now - last_heartbeat >= SCAN_WORKER_HEARTBEAT_SECONDS:
+                    self._update_scan_heartbeat(scan_id, user_id)
+                    last_heartbeat = now
                 try:
                     line = output_queue.get(timeout=min(1.0, timeout_seconds - elapsed))
                 except queue.Empty:
@@ -503,6 +544,15 @@ class ScanService:
                 return
             scan.current_stage = step_name
             scan.progress = max(scan.progress, min(progress, 99))
+            scan.updated_at = datetime.now(timezone.utc)
+            db.commit()
+
+    def _update_scan_heartbeat(self, scan_id: str, user_id: int) -> None:
+        """Keep long-running but active subprocess stages distinguishable from abandoned workers."""
+        with self._session_factory() as db:
+            scan = db.get(Scan, scan_id)
+            if scan is None or scan.user_id != user_id or scan.status != "running":
+                return
             scan.updated_at = datetime.now(timezone.utc)
             db.commit()
 

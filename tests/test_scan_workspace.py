@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import threading
@@ -227,6 +228,41 @@ class ScanWorkspaceIsolationTests(unittest.TestCase):
             self.assertEqual(_await_terminal(self.scan_db, [state.scan_id])[state.scan_id], "failed")
             self.assertIsNone(service.get_status(user_id=2))
             self.assertEqual(service.get_status(user_id=1).scan_id, state.scan_id)
+
+    def test_status_recovers_only_scans_with_expired_worker_heartbeat(self) -> None:
+        stale_id = "50000000-0000-4000-8000-000000000010"
+        fresh_id = "50000000-0000-4000-8000-000000000011"
+        now = datetime.now(timezone.utc)
+        with self.scan_db() as db:
+            db.add_all([
+                Scan(
+                    scan_id=stale_id, user_id=1, mode="synthetic", status="running",
+                    progress=0, current_stage="Discovering cloud resources",
+                    updated_at=now - timedelta(minutes=2),
+                ),
+                Scan(
+                    scan_id=fresh_id, user_id=2, mode="aws", status="running",
+                    progress=12, current_stage="Discovering AWS resources", updated_at=now,
+                ),
+                ScanStage(
+                    user_id=1, scan_id=stale_id, stage_order=1,
+                    name="Discovering cloud resources", status="running",
+                ),
+                ScanStage(
+                    user_id=2, scan_id=fresh_id, stage_order=1,
+                    name="Discovering AWS resources", status="running",
+                ),
+            ])
+            db.commit()
+
+        service = ScanService(session_factory=self.scan_db)
+        stale = service.get_status(user_id=1)
+        fresh = service.get_status(user_id=2)
+
+        self.assertEqual(stale.status, "failed")
+        self.assertIn("worker stopped reporting progress", stale.error)
+        self.assertEqual(stale.steps[0]["status"], "failed")
+        self.assertEqual(fresh.status, "running")
 
     def test_in_stage_progress_is_persisted_without_completing_the_stage(self) -> None:
         with self.scan_db() as db:

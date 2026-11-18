@@ -110,7 +110,7 @@ export function LiveScanButton() {
     startScan({ mode: "synthetic" });
   };
 
-  const effectiveMode = isScanning ? activeScanMode ?? scanMode : scanMode;
+  const effectiveMode = activeScanMode ?? scanMode;
 
   return (
     <div className="flex flex-col items-end gap-2">
