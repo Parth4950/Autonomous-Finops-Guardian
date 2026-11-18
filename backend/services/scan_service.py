@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -26,6 +27,8 @@ from backend.utils.aws_client import sanitize_aws_error_message
 from backend.utils.credential_encryption import CredentialTamperError
 
 logger = logging.getLogger(__name__)
+
+_FORECAST_PROGRESS = re.compile(r"Forecast progress: (\d+) / (\d+)")
 
 PYTHON = sys.executable
 ScanMode = Literal["synthetic", "aws"]
@@ -312,14 +315,15 @@ class ScanService:
                         if not script_path.exists():
                             raise FileNotFoundError(f"Pipeline script not found: {script_rel}")
                         logger.info("Cloud scan %s — running %s", scan_id[:8], script_rel)
-                        result = self._runner(
-                            [PYTHON, str(script_path)], cwd=self._project_root, capture_output=True,
-                            text=True, check=False, env=env,
+                        self._run_pipeline_subprocess(
+                            scan_id=scan_id,
+                            user_id=user_id,
+                            stage_index=index,
+                            total_stages=total,
+                            step_name=step_name,
+                            script_path=script_path,
+                            env=env,
                         )
-                        if result.returncode != 0:
-                            detail = (result.stderr or result.stdout or "Unknown error").strip()
-                            last_line = detail.splitlines()[-1] if detail else "Process exited with error"
-                            raise RuntimeError(sanitize_aws_error_message(last_line))
                 except Exception as exc:
                     safe_detail = sanitize_aws_error_message(exc)
                     logger.error("Cloud scan %s failed during stage %s: %s", scan_id[:8], step_name, safe_detail)
@@ -367,6 +371,82 @@ class ScanService:
         if aws_context.connection_id is not None:
             payload["aws_connection_id"] = aws_context.connection_id
         source_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _run_pipeline_subprocess(
+        self,
+        *,
+        scan_id: str,
+        user_id: int,
+        stage_index: int,
+        total_stages: int,
+        step_name: str,
+        script_path: Path,
+        env: dict[str, str],
+    ) -> None:
+        """Run one stage and persist known long-running forecast progress as it arrives."""
+        if self._runner is not subprocess.run:
+            # Keep the injectable runner contract used by isolated tests and deployments.
+            result = self._runner(
+                [PYTHON, str(script_path)],
+                cwd=self._project_root,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+            if result.returncode != 0:
+                detail = (result.stderr or result.stdout or "Unknown error").strip()
+                last_line = detail.splitlines()[-1] if detail else "Process exited with error"
+                raise RuntimeError(sanitize_aws_error_message(last_line))
+            return
+
+        command = [PYTHON, "-u", str(script_path)]
+        output_tail: list[str] = []
+        with subprocess.Popen(
+            command,
+            cwd=self._project_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+            env=env,
+        ) as process:
+            if process.stdout is not None:
+                for line in process.stdout:
+                    output_tail.append(line.rstrip())
+                    if len(output_tail) > 20:
+                        output_tail.pop(0)
+                    match = _FORECAST_PROGRESS.search(line)
+                    if match and int(match.group(2)) > 0:
+                        completed, total = (int(value) for value in match.groups())
+                        fraction = min(1.0, completed / total)
+                        stage_progress = int(
+                            ((stage_index + fraction) / total_stages) * 100
+                        )
+                        self._update_scan_progress(
+                            scan_id, user_id, step_name, stage_progress
+                        )
+            return_code = process.wait()
+
+        if return_code != 0:
+            detail = "\n".join(output_tail).strip()
+            last_line = detail.splitlines()[-1] if detail else "Process exited with error"
+            raise RuntimeError(sanitize_aws_error_message(last_line))
+
+    def _update_scan_progress(
+        self, scan_id: str, user_id: int, step_name: str, progress: int
+    ) -> None:
+        """Persist bounded in-stage progress while leaving the eight stages unchanged."""
+        with self._session_factory() as db:
+            scan = db.get(Scan, scan_id)
+            if scan is None or scan.user_id != user_id or scan.status != "running":
+                return
+            scan.current_stage = step_name
+            scan.progress = max(scan.progress, min(progress, 99))
+            scan.updated_at = datetime.now(timezone.utc)
+            db.commit()
 
     @staticmethod
     def _run_in_process_step(step_name: str, project_root: Path, workspace: Path) -> None:

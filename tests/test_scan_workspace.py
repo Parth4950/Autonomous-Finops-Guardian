@@ -169,6 +169,39 @@ class ScanWorkspaceIsolationTests(unittest.TestCase):
             self.assertIsNone(service.get_status(user_id=2))
             self.assertEqual(service.get_status(user_id=1).scan_id, state.scan_id)
 
+    def test_in_stage_progress_is_persisted_without_completing_the_stage(self) -> None:
+        with self.scan_db() as db:
+            scan_id = "50000000-0000-4000-8000-000000000001"
+            db.add(Scan(
+                scan_id=scan_id,
+                user_id=1,
+                mode="aws",
+                status="running",
+                progress=25,
+                current_stage="Forecasting utilization",
+            ))
+            db.add(ScanStage(
+                user_id=1,
+                scan_id=scan_id,
+                stage_order=3,
+                name="Forecasting utilization",
+                status="running",
+            ))
+            db.commit()
+
+        service = ScanService(session_factory=self.scan_db)
+        service._update_scan_progress(  # noqa: SLF001 - verifies persisted worker progress
+            scan_id, 1, "Forecasting utilization", 31
+        )
+
+        with self.scan_db() as db:
+            scan = db.get(Scan, scan_id)
+            stage = db.query(ScanStage).filter_by(scan_id=scan_id, stage_order=3).one()
+            self.assertEqual(scan.progress, 31)
+            self.assertEqual(scan.current_stage, "Forecasting utilization")
+            self.assertEqual(scan.status, "running")
+            self.assertEqual(stage.status, "running")
+
 
 if __name__ == "__main__":
     unittest.main()

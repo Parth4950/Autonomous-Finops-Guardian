@@ -412,7 +412,8 @@ class ProphetForecaster:
             except Exception as exc:
                 logger.error("Forecast failed for %s: %s", resource_id, exc)
 
-            if index % 20 == 0:
+            progress_interval = max(1, len(resource_ids) // 20)
+            if index % progress_interval == 0 or index == len(resource_ids):
                 logger.info("Forecast progress: %d / %d", index, len(resource_ids))
 
         results_frame = pd.DataFrame(results)
